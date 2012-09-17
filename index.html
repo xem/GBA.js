@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>GBA.js</title>
+  <script src=GBA.js></script>
+  <link rel=stylesheet href=style.css>
+</head>
+<body>
+
+  <div id=main>
+
+    <h1>GBA.js</h1>
+
+    <!-- games list -->
+    <select id=games>
+      <option value="">Choose a GBA ROM...</option>
+      <optgroup label="Tonc examples">
+        <option value="roms/Tonc/first.gba">First demo</option>
+        <option value="roms/Tonc/m3_demo.gba">Mode 3 demo</option>
+        <option value="roms/Tonc/pageflip.gba">Page flip</option>
+        <option value="roms/Tonc/bm_modes.gba">Bitmap modes</option>
+        <option value="" disabled>more soon</option>
+      </optgroup>
+      <optgroup label="DevKitARM examples">
+        <option value="roms/DevKitARM/basic_sound.gba">Basic_sound</option>
+        <option value="roms/DevKitARM/PlayBoyScout_mb.gba">PlayBoyScout</option>
+        <option value="roms/DevKitARM/ansi_console.gba">Ansi_console</option>
+        <option value="roms/DevKitARM/PCXView.gba">PCXView</option>
+        <option value="roms/DevKitARM/SimpleBGScroll_mb.gba">SimpleBGScroll</option>
+        <option value="roms/DevKitARM/sprite.gba">Sprite</option>
+        <option value="roms/DevKitARM/template_mb.gba">Template</option>
+      </optgroup>
+      <optgroup label="GBAnews homebrews">
+        <option disabled>soon</option>
+      </optgroup>
+    </select>
+    <input type=button value=play onclick="
+      var g=document.getElementById('games'),
+      s=document.getElementById('stop'),
+      c=document.getElementById('screen'),
+      p=document.getElementById('progress');
+      if(g.value){
+        gba(g.value, c, p);
+        this.style.display='none';
+        g.style.display='none';
+        s.style.visibility='visible'
+      }
+    ">
+    <input type=button value=stop id=stop onclick="window.location='.'">
+
+    <!-- loading progress -->
+    <progress id=progress></progress>
+
+    <!-- screen -->
+    <canvas id=screen width=240 height=160>
+      <div class="canvas-fallback">Update your browser!</div>
+    </canvas>
+
+  </div>
+
+  <!-- links -->
+  <a href="http://twitter.com/MaximeEuziere">@MaximeEuziere</a>
+  -
+  <a href="making-of">Making-of</a>
+  -
+  <a href="http://github.com/xem/gba.js">GitHub</a>
+
+</body>
+</html>
