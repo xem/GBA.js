@@ -26,12 +26,11 @@ Progress:
 
 - ROM Loader:                 100%
 - Read/write in the memories: 100%
-- CPU THUMB instructions:     in progress...
-- CPU ARM instructions:       0%
+- CPU ARM instructions:       in progress...
+- CPU THUMB instructions:     0%
 - BIOS funtions:              0%
 - Graphics:                   0%
 - Controls:                   0%
 - Sound:                      0%
 - Save:                       0%
 - Multiplayer:                0%
-

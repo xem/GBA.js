@@ -11,6 +11,7 @@ canvas { display: block; margin: 90px auto; -webkit-transform: scale(2); -moz-tr
 .canvas-fallback { width: 480px; height: 160px; padding-top: 160px; text-align: center; background: #000; color: #fff; }
 a { color: #000 }
 a:hover { font-weight: bold; letter-spacing: -0.5px; }
+article a:hover { font-weight: normal; letter-spacing: 0; }
 article { font-size: 14px; margin: 30px 0; text-align: justify; }
 article a, nav a, .story_index a { color: #20A }
 nav .right { float: right; }

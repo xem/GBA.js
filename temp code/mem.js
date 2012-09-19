@@ -10,9 +10,6 @@
 * @return a 8/16/32-bit value read in memory at the specified address (if only 2 parameters are provided).
 **/
 
-/* EXTERNAL VARS */
-var t, u, v, w, z;
-
 /* HUMAN-READABLE CODE */
 function mem(address, bytes, value, mask, force_write){
   var prefix = address >> 24,                         // Address prefix (subarray index)
@@ -55,7 +52,7 @@ function mem(address, bytes, value, mask, force_write){
     case 0x8:                                         // Game Pak ROM
     case 0x9:
       prefix = 8;
-      subaddress = address - 0xA000000;               // Handle sub-address
+      subaddress = address - 0x8000000;               // Handle sub-address
       break;
 
     case 0xA:                                         // Game Pak ROM mirror 1
@@ -159,7 +156,7 @@ function mem(address, bytes, value, mask, force_write){
       )
     ){
       bytes = 2;                                      // It's written twice (16 bits)
-      value = (value << 8) + value;
+      value = value * 0x100 + value;
     }
   }
 
@@ -184,7 +181,7 @@ function mem(address, bytes, value, mask, force_write){
   else {
     for(t = 0, i = bytes; i; i--){                    // For each byte of the value in memory
       u = m[prefix][subaddress + i - 1] || 0;         // Read the byte (or 0 if undefined)
-      t = (t << 8) + u;                               // Add it at the end of the final result
+      t = t * 0x100 + u;                              // Add it at the end of the final result                         // Add it at the end of the final result
     }
     return t;                                         // And return it
   }
@@ -305,23 +302,23 @@ function mem(address, bytes, value, mask, force_write){
       )
     ){
       bytes = 2;
-      value = value << 8 + value;
+      value = value * 0x100 + value;
     }
   }
 
   if(value)
     for(i = 0; i < bytes; i++, value = value >> 8, mask = mask >> 8)
+    {
       m[prefix][address + i] = ((m[prefix][address + i] || 0) & (0xFF - (mask & 0xFF))) + (value & (mask & 0xFF));
-
+    }
   else{
     for(value = 0, i = bytes; i; i--)
-      value = (value << 8) + (m[prefix][address + i - 1] || 0);
+    {
+      value = (value * 0x100) + (m[prefix][address + i - 1] || 0);
+    }
     return value;
   }
 }
 
-/* HUMAN-READABLE CODE MINIFIED */
-function mem(c,f,d,e,g){var b=c>>24,a;switch(b){case 2:a=(c-33554432)%262144;break;case 3:a=(c-50331648)%32768;break;case 4:a=c-67108864;2048==a%65536?a=2048:2049==a%65536&&(a=2049);break;case 5:a=(c-83886080)%1024;break;case 6:a=(c-100663296)%131072;98303<a&&131072>a&&(a-=8E3);break;case 7:a=(c-117440512)%1024;break;case 8:case 9:b=8;a=c-167772160;break;case 10:case 11:b=8;a=c-167772160;break;case 12:case 13:b=8;a=c-201326592;break;case 14:case 15:b=14,a=(c-234881024)%16777216}z=4294967295;if(!g&& 4==b){0==a&&(z=65527);4==a&&(z=65528);132==a&&(z=65520);if(288==a||290==a||292==a||294==a)mem(67109160,2)&8192==bitsC_D&&(z=0);296==a&&(mem(67109160,2)&4096==bitsC_D?z=65531:mem(67109160,2)&8192==bitsC_D?z=65411:mem(67109160,2)&12288==bitsC_D&&(z=65423));304==a&&(z=62208);304==a&&(z=32767)}if(d&&1==f){if(7==b||6==b&&mem(67108864,2)&0<=bits0_2&&mem(67108864,2)&2>=bits0_2&&65536<=a&&98303>=a||6==b&&mem(67108864,2)&3<=bits0_2&&mem(67108864,2)&5>=bits0_2&&81920<=a&&98303>=a)return;if(5==b||6==b&&mem(67108864, 2)&0<=bits0_2&&mem(67108864,2)&2>=bits0_2&&0<=a&&65535>=a||6==b&&mem(67108864,2)&3<=bits0_2&&mem(67108864,2)&5>=bits0_2&&0<=a&&81919>=a)f=2,d=(d<<8)+d}if(d){e=(e||4294967295)&z;for(i=0;i<f;i++)t=m[b][a+i]||0,u=e&255,v=255-u,w=d&u,t&=v,t+=w,m[b][a+i]=t,d>>=8,e>>=8}else{t=0;for(i=f;i;i--)u=m[b][a+i-1]||0,t=(t<<8)+u;return t}};
-
-/* HAND-OPTIMIZED CODE MINIFIED */
-function mem(a,f,d,c,g){var e=a>>24,c=c||4294967295;switch(e){case 2:a=(a-33554432)%262144;break;case 3:a=(a-50331648)%32768;break;case 4:a=(a-67108864)%65536;if(!g){0==a&&(c&=65527);4==a&&(c&=65528);132==a&&(c&=65520);a%2&&(287<a&&295>a&&mem(67109160,2)&8192==bitsC_D)&&(c&=0);if(296==a)switch(mem(67109160,2)&bitsC_D){case 4096:c&=65531;break;case 8192:c&=65411;break;case 768:c&=65423}304==a&&(c&=62208);304==a&&(c&=32767)}break;case 5:a=(a-83886080)%1024;break;case 6:a=(a-100663296)%131072;98303<a&& 131072>a&&(a-=8E3);break;case 7:a=(a-117440512)%1024;break;case 8:case 9:case 10:case 11:case 12:case 13:e=8;a=(a-134217728)%33554432;break;case 14:case 15:e=14,a=(a-234881024)%16777216}if(d&&1==f){b=mem(67108864,2)&bits0_2;if(7==e||6==e&&(0<=b&&2>=b&&65536<=a&&98303>=a||3<=b&&5>=b&&81920<=a&&98303>=a))return;if(5==e||6==e&&(0<=b&&2>=b&&0<=a&&65535>=a||3<=b&&5>=b&&0<=a&&81919>=a))f=2,d*=257}if(d)for(i=0;i<f;i++,d>>=8,c>>=8)m[e][a+i]=((m[e][a+i]||0)&255-(c&255))+(d&c&255);else{d=0;for(i=f;i;i--)d=(d<<8)+(m[e][a+i-1]||0);return d}};
+/* MINIFIED */
+function mem(a,e,c,b,f){var d=a>>24,b=b||4294967295;switch(d){case 2:a=(a-33554432)%262144;break;case 3:a=(a-50331648)%32768;break;case 4:a=(a-67108864)%65536;if(!f){0==a&&(b&=65527);4==a&&(b&=65528);132==a&&(b&=65520);a%2&&(287<a&&295>a&&mem(67109160,2,null,null,null)&8192==bitsC_D)&&(b&=0);if(296==a)switch(mem(67109160,2,null,null,null)&bitsC_D){case 4096:b&=65531;break;case 8192:b&=65411;break;case 768:b&=65423}304==a&&(b&=62208);304==a&&(b&=32767)}break;case 5:a=(a-83886080)%1024;break;case 6:a= (a-100663296)%131072;98303<a&&131072>a&&(a-=8E3);break;case 7:a=(a-117440512)%1024;break;case 8:case 9:case 10:case 11:case 12:case 13:d=8;a=(a-134217728)%33554432;break;case 14:case 15:d=14,a=(a-234881024)%16777216}if(c&&1==e){t=mem(67108864,2,null,null,null)&bits0_2;if(7==d||6==d&&(0<=t&&2>=t&&65536<=a&&98303>=a||3<=t&&5>=t&&81920<=a&&98303>=a))return;if(5==d||6==d&&(0<=t&&2>=t&&0<=a&&65535>=a||3<=t&&5>=t&&0<=a&&81919>=a))e=2,c=256*c+c}if(c)for(i=0;i<e;i++,c>>=8,b>>=8)m[d][a+i]=((m[d][a+i]||0)&255-(b&255))+(c&b&255);else{c=0;for(i=e;i;i--)c=256*c+(m[d][a+i-1]||0);return c}};

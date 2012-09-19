@@ -11,8 +11,9 @@ xhr = new XMLHttpRequest,
 
 // CPU registers
 r = [],               // CPU registers 0 - 14
-cpsr,                 // Current program status register
-pc,                   // Program counter (r15)
+cpsr = 0x00000010,    // Current program status register (default setting: "user mode", "ARM state")
+pca = 0x8000000,      // Program counter address
+pc,                   // Program counter (current instruction)
 
 // Banked registers
 r_irq = [],           // IRQ banked registers (r13, r14)
@@ -87,7 +88,14 @@ bitsE_F = 0xC000,
 bits0_26 = 0x7FFFFFF,
 bits0_27 = 0xFFFFFFF,
 bits0_31 = 0xFFFFFFFF,
-bits8_26 = 0x7FFFF00,
+bits8_26 = 0x7FFFF00;
+
+// CPU registers default values */
+r[13] = 0x3007F00;                   // default r13 value when processor mode is "user"
+
+// I/O registers default values */
+mem(0x4000088, 2, 0x0200);           // SOUNDBIAS
+mem(0x4000802, 2, 0x0D00);           // REG_IMC_H
 
 /* MINIFIED CODE */
-var i,x,y,t,u,v,w,z,xhr=new XMLHttpRequest,r=[],cpsr,pc,r_irq=[],cpsr_irq,r_fiq=[],cpsr_fiq,r_svc=[],cpsr_svc,r_abt=[],cpsr_abt,r_und=[],cpsr_und,m={2:[],3:[],4:[],5:[],6:[],7:[],8:[],14:[]},bit0=1,bit1=2,bit2=4,bit3=8,bit4=16,bit5=32,bit6=64,bit7=128,bit8=256,bit9=512,bit10=1024,bit11=2048,bit12=4096,bit13=8192,bit14=16384,bit15=32768,bit27=134217728,bits0_1=3,bits0_2=7,bits0_3=15,bits0_4=31,bits0_5=63,bits0_7=255,bits0_9=1023,bits0_A=2047,bits0_D=16383,bits0_F=65535,bits1_9=1022,bits2_3=12,bits4_5=48,bits4_6=112,bits4_7= 240,bits5_6=96,bits6_7=192,bits7_8=384,bits8_9=768,bits8_A=1792,bits8_B=3840,bits8_C=7936,bits8_E=32512,bits8_F=65280,bitsC_D=12288,bitsC_F=61440,bitsD_F=57344,bitsE_F=49152,bits0_26=134217727,bits0_27=268435455,bits0_31=4294967295,bits8_26=134217472;
+var i,x,y,t,u,v,w,z,xhr=new XMLHttpRequest,r=[],cpsr=16,pca=134217728,pc,r_irq=[],cpsr_irq,r_fiq=[],cpsr_fiq,r_svc=[],cpsr_svc,r_abt=[],cpsr_abt,r_und=[],cpsr_und,m={2:[],3:[],4:[],5:[],6:[],7:[],8:[],14:[]},bit0=1,bit1=2,bit2=4,bit3=8,bit4=16,bit5=32,bit6=64,bit7=128,bit8=256,bit9=512,bit10=1024,bit11=2048,bit12=4096,bit13=8192,bit14=16384,bit15=32768,bit27=134217728,bits0_1=3,bits0_2=7,bits0_3=15,bits0_4=31,bits0_5=63,bits0_7=255,bits0_9=1023,bits0_A=2047,bits0_D=16383,bits0_F=65535,bits1_9=1022, bits2_3=12,bits4_5=48,bits4_6=112,bits4_7=240,bits5_6=96,bits6_7=192,bits7_8=384,bits8_9=768,bits8_A=1792,bits8_B=3840,bits8_C=7936,bits8_E=32512,bits8_F=65280,bitsC_D=12288,bitsC_F=61440,bitsD_F=57344,bitsE_F=49152,bits0_26=134217727,bits0_27=268435455,bits0_31=4294967295,bits8_26=134217472;r[13]=50364160;mem(67109E3,2,512);mem(67110914,2,3328);
