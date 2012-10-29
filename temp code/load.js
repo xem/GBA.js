@@ -45,7 +45,7 @@ if(progressbar) progressbar.style.visibility = 'visible';
 
 
 /* HUMAN-READABLE CODE MINIFIED */
-xhr.addEventListener("progress",function(a){progressbar&&(progressbar.value=a.loaded/a.total)});xhr.open("GET",file);xhr.responseType="arraybuffer";xhr.onload=function(){m[8]="undefined"!=typeof VBArray?VBArray(xhr.a).b():new Uint8Array(xhr.response);progressbar&&(progressbar.style.visibility="hidden");play()};xhr.send();progressbar&&(progressbar.style.visibility="visible");
+xhr.addEventListener("progress",function(a){progressbar&&(progressbar.value=a.loaded/a.total)});xhr.open("GET",file);xhr.responseType="arraybuffer";xhr.onload=function(){m[8]="undefined"!=typeof VBArray?VBArray(xhr.responseBody).toArray():new Uint8Array(xhr.response);progressbar&&(progressbar.style.visibility="hidden");play()};xhr.send();progressbar&&(progressbar.style.visibility="visible");
 
 /* HAND-OPTIMIZED CODE MINIFIED */
-xhr.addEventListener("progress",function(a){progressbar&&(progressbar.value=a.loaded/a.total)});xhr.open("GET",file);xhr.responseType="arraybuffer";xhr.onload=function(){m[8]="undefined"!=typeof VBArray?VBArray(xhr.a).b():new Uint8Array(xhr.response);progressbar.style.visibility="hidden";play()};xhr.send();progressbar&&(progressbar.style.visibility="visible");
+xhr.addEventListener("progress",function(a){progressbar&&(progressbar.value=a.loaded/a.total)});xhr.open("GET",file);xhr.responseType="arraybuffer";xhr.onload=function(){m[8]="undefined"!=typeof VBArray?VBArray(xhr.responseBody).toArray():new Uint8Array(xhr.response);progressbar.style.visibility="hidden";play()};xhr.send();progressbar&&(progressbar.style.visibility="visible");

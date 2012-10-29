@@ -24,10 +24,12 @@ Here's the HTML code needed to use it:
 
 Progress:
 
+- Homebrews hosted:           694              
 - ROM Loader:                 100%
-- Read/write in the memories: 100%
-- CPU ARM instructions:       in progress...
-- CPU THUMB instructions:     0%
+- Memory read/write:          100%
+- CPU ARM/THUMB instructions: 50%...
+- CPU THUMB instructions:     50%...
+- CPU loops optimizations     0%
 - BIOS funtions:              0%
 - Graphics:                   0%
 - Controls:                   0%

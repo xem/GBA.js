@@ -3,6 +3,7 @@
 <head>
   <meta charset=utf-8>
   <title>GBA.js</title>
+  <script>var debug = true;</script>
   <script src=GBA.js></script>
   <link rel=stylesheet href=style.css>
 </head>
@@ -11,25 +12,27 @@
   <div id=main>
 
     <h1>GBA.js</h1>
+    <h3>A Gameboy Advance emulator in JavaScript</h3>
+    <br>
 
     <!-- games list -->
     <select id=games>
       <option value="">Choose a GBA ROM...</option>
       <optgroup label="Tonc examples">
-        <option value="roms/Tonc/first.gba">First demo</option>
-        <option value="roms/Tonc/m3_demo.gba">Mode 3 demo</option>
-        <option value="roms/Tonc/pageflip.gba">Page flip</option>
-        <option value="roms/Tonc/bm_modes.gba">Bitmap modes</option>
+        <option value="roms/Tonc/first.gba" selected>First demo</option>
+        <option value="roms/Tonc/m3_demo.gba" disabled>Mode 3 demo</option>
+        <option value="roms/Tonc/pageflip.gba" disabled>Page flip</option>
+        <option value="roms/Tonc/bm_modes.gba" disabled>Bitmap modes</option>
         <option value="" disabled>more soon</option>
       </optgroup>
       <optgroup label="DevKitARM examples">
-        <option value="roms/DevKitARM/basic_sound.gba">Basic_sound</option>
-        <option value="roms/DevKitARM/PlayBoyScout_mb.gba">PlayBoyScout</option>
-        <option value="roms/DevKitARM/ansi_console.gba">Ansi_console</option>
-        <option value="roms/DevKitARM/PCXView.gba">PCXView</option>
-        <option value="roms/DevKitARM/SimpleBGScroll_mb.gba">SimpleBGScroll</option>
-        <option value="roms/DevKitARM/sprite.gba">Sprite</option>
-        <option value="roms/DevKitARM/template_mb.gba">Template</option>
+        <option value="roms/DevKitARM/basic_sound.gba" disabled>Basic_sound</option>
+        <option value="roms/DevKitARM/PlayBoyScout_mb.gba" disabled>PlayBoyScout</option>
+        <option value="roms/DevKitARM/ansi_console.gba" disabled>Ansi_console</option>
+        <option value="roms/DevKitARM/PCXView.gba" disabled>PCXView</option>
+        <option value="roms/DevKitARM/SimpleBGScroll_mb.gba" disabled>SimpleBGScroll</option>
+        <option value="roms/DevKitARM/sprite.gba" disabled>Sprite</option>
+        <option value="roms/DevKitARM/template_mb.gba" disabled>Template</option>
       </optgroup>
       <optgroup label="GBAnews homebrews">
         <option disabled>soon</option>
@@ -62,8 +65,7 @@
   <!-- links -->
   <a href="http://twitter.com/MaximeEuziere">@MaximeEuziere</a>
   -
-  <a href="making-of">Making-of</a>
-  -
+  <!--<a href="making-of">Making-of</a> - -->
   <a href="http://github.com/xem/gba.js">GitHub</a>
 
 </body>

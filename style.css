@@ -3,8 +3,9 @@ body { background: #abcdef; text-align: center; font: normal 16px Arial; }
 #main { width: 480px; margin: 0 auto 5px; text-align: left; border: 1px solid black; padding: 15px 15px 5px; background: #def; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px; }
 #main.story { width: 720px }
 #main.story_index { text-align: center; }
-h1 { margin: 0 0 10px; font-size: 36px; text-align: center; }
+h1 { font-size: 36px; text-align: center; margin: 0; }
 h2 { color: #555; font-size: 26px; text-align: center; }
+h3 { color: #555; font-size: 18px; text-align: center; margin: 0; }
 #stop { visibility: hidden }
 progress { visibility: hidden; float: right; }
 canvas { display: block; margin: 90px auto; -webkit-transform: scale(2); -moz-transform: scale(2); -ms-transform: scale(2); transform: scale(2); background: #000; border: 1px solid #000; }
