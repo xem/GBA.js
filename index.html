@@ -3,7 +3,6 @@
 <head>
   <meta charset=utf-8>
   <title>GBA.js</title>
-  <script>var debug = true;</script>
   <script src=GBA.js></script>
   <link rel=stylesheet href=style.css>
 </head>
@@ -43,8 +42,9 @@
       s=document.getElementById('stop'),
       c=document.getElementById('screen'),
       p=document.getElementById('progress');
+      d=document.getElementById('debug');
       if(g.value){
-        gba(g.value, c, p);
+        gba(g.value, c, p, d);
         this.style.display='none';
         g.style.display='none';
         s.style.visibility='visible'
@@ -57,7 +57,7 @@
 
     <!-- screen -->
     <canvas id=screen width=240 height=160>
-      <div class="canvas-fallback">Update your browser!</div>
+      <div class=canvas-fallback>Update your browser!</div>
     </canvas>
 
   </div>
@@ -67,6 +67,11 @@
   -
   <!--<a href="making-of">Making-of</a> - -->
   <a href="http://github.com/xem/gba.js">GitHub</a>
+
+  <div class="debug">
+    Debug <input onclick="if(this.className=='checked'){this.className='';this.parentNode.className='debug off'}else{this.className='checked';this.parentNode.className='debug on'}" type=checkbox>
+    <pre id=debug></pre>
+  </div>
 
 </body>
 </html>

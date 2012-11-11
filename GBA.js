@@ -1,21 +1,34 @@
 /**
 * GBA.js - GameBoy Advance emulator in JavaScript
-* @author Maxime Euzière
+* @author Maxime Euziere
 * @param file: the file name/path of the GBA game ROM to play.
 * @param canvas: the HTML canvas element to use as a GBA screen (240 * 160 px).
-* @param progressbar (optional): the HTML progress element showing the ROM loading status.
+* @param progressbar (optional): the <progress> element showing the ROM loading status.
+* @param debug (optional): the element showing the debug information.
 **/
-function gba(file, canvas, progressbar){
+function gba(file, canvas, progressbar, debug){
+
+  /* IE */
+  var ie=navigator.appVersion.match(/MSIE ([\d.]+)/);ie=ie?ie[1]:99;
+  if(ie<9){alert("Update your browser!");return;}
 
   /* Initializations (see "init.js") */
-  var i,x,y,t,u,v,w,z,trace,xhr=new XMLHttpRequest,r=[],cpsr=16,cpsr_c,cpsr_n,cpsr_z,cpsr_v,r_irq=[],cpsr_irq,r_fiq=[],cpsr_fiq,r_svc=[],cpsr_svc,r_abt=[],cpsr_abt,r_und=[],cpsr_und,m={2:[],3:[],4:[],5:[],6:[],7:[],8:[],14:[]},instr,cond,condname,opcode,mask,rn,rd,rs,rm,nn,imm,sr,s,is,st,op,op2,cy,msbd,msbs;r[13]=50364160;r[15]=134217728;mem(67109E3,2,512);mem(67110914,2,3328);
+  var i,x,y,t,u,v,w,z,interval,ii,trace,instructions=0,xhr=new XMLHttpRequest,r=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],cpsr=16,cpsr_c,cpsr_n,cpsr_z,cpsr_v,cpsr_t,r_irq=[],cpsr_irq,r_fiq=[],cpsr_fiq,r_svc=[],cpsr_svc,r_abt=[],cpsr_abt,r_und=[],cpsr_und,m={2:[],3:[],4:[],5:[],6:[],7:[],8:[],14:[]},instr,cond,condname,opcode,mask,rn,rd,rs,rm,ro,nn,imm,sr,s,is,st,op,op2,cy,msbd,msbs,pclr,gameover;r[13]=50364160;r[15]=134217728;mem(67109E3,2,512);mem(67110914,2,3328);
 
   /* Load the game ROM in memory (see "load.js") */
-  xhr.addEventListener("progress",function(a){progressbar&&(progressbar.value=a.loaded/a.total)});xhr.open("GET",file);xhr.responseType="arraybuffer";xhr.onload=function(){m[8]="undefined"!=typeof VBArray?VBArray(xhr.responseBody).toArray():new Uint8Array(xhr.response);progressbar.style.visibility="hidden";play()};xhr.send();progressbar&&(progressbar.style.visibility="visible");
+  xhr.addEventListener("progress",function(a){progressbar&&(progressbar.value=a.loaded/a.total)});xhr.open("GET",file);xhr.responseType="arraybuffer";xhr.onload=function(){m[8]=(ie&&ie<10)?VBArray(xhr.responseBody).toArray():new Uint8Array(xhr.response);progressbar.style.visibility="hidden";play()};xhr.send();progressbar&&(progressbar.style.visibility="visible");
 
   /* Debug */
-  function log(s){if(debug)console.log(s)}
-  function trace_r(){while(trace.length<55)trace+=" ";trace+=";NZCV:";for(i=31;i>27;i--)trace+=bit(cpsr,i);for(i=0;i<15;i++)trace+=" R"+i+":"+(r[i]||0).toString(16)}
+  var displaydebug = true;
+  function log(s){if(debug&&displaydebug)debug.innerHTML += "<br>" + s}
+  function trace_r(){while(trace.length<54)trace+=" ";trace+=";NZCV:";for(i=31;i>27;i--)trace+=bit(cpsr,i);for(i=0;i<15;i++)if(i<8||i>12)trace+=" R"+i+":"+("0000000"+(r[i]||0).toString(16)).substr(("0000000"+(r[i]||0).toString(16)).length-8,("0000000"+(r[i]||0).toString(16)).length)}
+
+  /* CPSR operations (see "cpsr.js") */
+  function update_cpsr_n(a){cpsr=bit(r[a],31)?cpsr|2147483648:cpsr&2147483647}
+  function update_cpsr_z(a){cpsr=0==r[a]?cpsr|1073741824:cpsr&3221225471}
+  function update_cpsr_c(a){4294967295<r[a]?(cpsr|=536870912,r[a]=bit(r[a],0,31)):cpsr&=3758096383}
+  function update_cpsr_c_sub(a,b){cpsr=a-b<a+(Math.pow(2,a.toString(2).length)-1-b)?cpsr|536870912:cpsr&3758096383}
+  function update_cpsr_v(){}
 
   /* Binary operations (see "binary.js") */
   function lshift(b,a){return b*Math.pow(2,a)}
@@ -24,8 +37,86 @@ function gba(file, canvas, progressbar){
   function ror(b,c,a){return lshift(b&Math.pow(2,a)-1,c-a)+rshift(b,a)}
 
   /* Memory accessor (see "mem.js") */
-  function mem(a,e,b,c){var d=rshift(a,24),c=c||4294967295;switch(d){case 2:a=(a-33554432)%262144;break;case 3:a=(a-50331648)%32768;break;case 4:a=(a-67108864)%65536;break;case 5:a=(a-83886080)%1024;break;case 6:a=(a-100663296)%131072;98303<a&&131072>a&&(a-=8E3);break;case 7:a=(a-117440512)%1024;break;case 8:case 9:case 10:case 11:case 12:case 13:d=8;a=(a-134217728)%33554432;break;case 14:case 15:d=14,a=(a-234881024)%16777216}if(b)for(i=0;i<e;i++,b=rshift(b,8),c=rshift(c,8))m[d][a+i]=((m[d][a+i]||0)& 255-(c&255))+(b&c&255);else{b=0;for(i=e;i;i--)b=256*b+(m[d][a+i-1]||0);return b}};
-  
+  function mem(address, bytes, value, mask){
+    var prefix = rshift(address, 24);
+    mask = mask || 0xFFFFFFFF;
+
+    switch(prefix){
+      case 0x2:
+        address = (address - 0x2000000) % 0x40000;
+        break;
+
+      case 0x3:
+        address = (address - 0x3000000) % 0x8000;
+        break;
+
+      case 0x4:
+        address = (address - 0x4000000) % 0x10000;
+        if(value){
+          io(address, value);
+        }
+        break;
+
+      case 0x5:
+        address = (address - 0x5000000) % 0x400;
+        break;
+
+      case 0x6:
+        if(value) console.log(instructions + ": [" + address.toString(16) + "] = " + value.toString(16));
+        address = (address - 0x6000000) % 0x20000;
+        if(address > 0x17FFF && address < 0x20000)
+          address -= 8000;
+        break;
+
+      case 0x7:
+        address = (address - 0x7000000) % 0x400;
+        break;
+
+      case 0x8:
+      case 0x9:
+      case 0xA:
+      case 0xB:
+      case 0xC:
+      case 0xD:
+        prefix = 0x08;
+        address = (address - 0x8000000) % 0x2000000;
+        break;
+
+      case 0xE:
+      case 0xF:
+        prefix = 0xE;
+        address = (address - 0xE000000) % 0x1000000;
+        break;
+    }
+    if(value)
+      for(i = 0; i < bytes; i++, value = rshift(value, 8), mask = rshift(mask, 8))
+      {
+        m[prefix][address + i] = ((m[prefix][address + i] || 0) & (0xFF - (mask & 0xFF))) + (value & (mask & 0xFF));
+      }
+    else{
+      for(value = 0, i = bytes; i; i--)
+      {
+        value = (value * 0x100) + (m[prefix][address + i - 1] || 0);
+      }
+      return value;
+    }
+  }
+
+  /* I/O registers update */
+  function io(address, value){
+    switch(address){
+      case 0x0:
+        dispcnt_k = !!bit(value, 0xA);                  // use BG2
+        dispcnt_m = bit(value, 0, 2);                   // video mode
+        break;
+    }
+  }
+
+  /* VRAM update */
+  function vram(address, value){
+
+  }
+
   /* Cross-browser requestAnimationFrame (see "rAF.js") */
   for(t=0,v=["ms","moz","webkit","o"],i=0;i<v.length&&!window.requestAnimationFrame;++i)window.requestAnimationFrame=window[v[i]+"RequestAnimationFrame"],window.a=window[v[i]+"CancelAnimationFrame"]||window[v[i]+"CancelRequestAnimationFrame"];window.requestAnimationFrame||(window.requestAnimationFrame=function(g){var d=(new Date).getTime(),e=Math.max(0,16-(d-t)),h=window.setTimeout(function(){g(d+e)},e);t=d+e;return h});
 
@@ -40,7 +131,7 @@ function gba(file, canvas, progressbar){
 
     /* debug */ t = "0000000" + instr.toString(16);
     /* debug */ t = t.substr(t.length - 8, t.length);
-    /* debug */ trace += r[15].toString(16) + "   " + t + "   ";
+    /* debug */ trace += " " + r[15].toString(16) + "  " + t + "    ";
 
     // Condition
     cond = bit(instr, 28, 31);                          // condition field (bits 28-31)
@@ -92,16 +183,17 @@ function gba(file, canvas, progressbar){
     else{
       /* debug */ trace += "??? " + condname + " ;false";
     }
-    
+
     trace_r();
-    
+
     /* debug */ log(trace);
     r[15] += 4;                                         // place PC on next instruction
   }
-  function arm3(){
+  function arm3(){                                      // No flags affected
     rn = bit(instr, 0, 3);                              // get Rn (bits 0-3)
     if(bit(r[rn], 0) == 1){                             // if Rn.0 (bit 0 of Rn) = 1
       cpsr |= 0x20;                                     // THUMB mode: T (bit 5 of CPSR) = 1
+      cpsr_t = 1;                                       // Save it in a var.
       opcode = bit(instr, 4, 7);                        // get opcode (bits 4-7)
       if(opcode == 0x3){                                // if opcode == 3 : BLX (branch with link and exchange - call a subroutine in THUMB mode, specifying a return address)
         r[14] = r[15] + 4;                              // link (LR = PC + 4)
@@ -115,7 +207,7 @@ function gba(file, canvas, progressbar){
     trace_r();
     log(trace);
   }
-  function arm4(){
+  function arm4(){                                      // No flags affected
     nn = bit(instr, 0, 23);                             // get nn (bits 0-23)
     opcode = !!bit(instr, 24);                          // get opcode (bit 24) as boolean
     if(opcode){                                         // if opcode == 1: BL (Branch with link - call a subroutine, specifying a return address)
@@ -129,7 +221,7 @@ function gba(file, canvas, progressbar){
     trace_r();
     log(trace);
   }
-  function arm5(){
+  function arm5(){                                      // No flags affected if S == 0, else: NZC (logical operations), NZCV (arithmetical operations), NZCV (opcodes where unused Rd = 1111, {P}, in user mode) 
     opcode = bit(instr, 21, 24);                        // get opcode (bits 21-24)
     if(i){                                              // if I == 1 (immediate as 2nd operand)
       is = bit(instr, 8, 11) * 2;                       // get Is (bits 8-11, values: 0-30 in steps of 2)
@@ -212,7 +304,7 @@ function gba(file, canvas, progressbar){
         /* debug */ trace += "ARM5";
     }
   }
-  function arm6(){
+  function arm6(){                                      // No flags affected
     psr = !!bit(instr, 22);                             // get Psr (bit 22)
     opcode = !!bit(instr, 21);                          // get ARM6 opcode (bit 21)
     if(opcode){                                         // if opcode == MSR
@@ -247,10 +339,10 @@ function gba(file, canvas, progressbar){
       rd = bit(instr, 12, 15);                          // get Rd (bits 1-15)
     }
   }
-  function arm7(){
+  function arm7(){                                      // No flags affected if S == 0, else: NZ and C=0 (MUL, MLA), NZ and C=0, V=0 (MULL, MLAL), none for halfword multiplies.
     /* debug */ trace += "ARM7";
   }
-  function arm9(){
+  function arm9(){                                      // No flags affected
     i = !!bit(instr, 25);                               // get I (bit 25) as boolean
     p = !!bit(instr, 24);                               // get P (bit 24) as boolean
     u = !!bit(instr, 23);                               // get U (bit 23) as boolean
@@ -352,44 +444,44 @@ function gba(file, canvas, progressbar){
       }
     }
   }
+  function arm10(){                                     // No flags affected
+  }
+  function arm11(){                                     // No flags affected
+  }
+  function arm12(){                                     // No flags affected
+  }
+  function arm13(){                                     // No flags affected
+  }
+  function arm14(){                                     // No flags affected
+  }
 
   /* THUMB instruction execution (see "thumb.js") */
-  function thumb(){instr=mem(r[15],2);t="000"+instr.toString(16);t=t.substr(t.length-4,t.length);trace+=r[15].toString(16)+"   "+t+"       ";t=bit(instr,8,15);u=bit(instr,10,15);v=bit(instr,11,15);w=bit(instr,12,15);z=bit(instr,13,15);0==z?(opcode=bit(instr,11,12),3==opcode?thumb2():thumb1()):1==z?thumb3():16==u?thumb4():17==u?thumb5():9==v?thumb6():5==w?thumb7and8():3==z?thumb9():8==w?thumb10():9==w?thumb11():10==w?thumb12():176==t?thumb13():190==t?thumb17bkpt():11==w?thumb14():12==w?thumb15():223== t?thumb17swi():13==w?thumb16():28==v?thumb18():30==v&&thumb19();trace_r();log(trace);r[15]+=2} 
-  function thumb1(){
+  function thumb(){instr=mem(r[15],2);t="000"+instr.toString(16);t=t.substr(t.length-4,t.length);trace+=" "+r[15].toString(16)+"  "+t+"        ";t=bit(instr,8,15);u=bit(instr,10,15);v=bit(instr,11,15);w=bit(instr,12,15);z=bit(instr,13,15);0==z?(opcode=bit(instr,11,12),3==opcode?thumb2():thumb1()):1==z?thumb3():16==u?thumb4():17==u?thumb5():9==v?thumb6():5==w?thumb7and8():3==z?thumb9():8==w?thumb10():9==w?thumb11():10==w?thumb12():176==t?thumb13():190==t?thumb17bkpt():11==w?thumb14():12==w?thumb15():223== t?thumb17swi():13==w?thumb16():28==v?thumb18():30==v&&thumb19();trace_r();log(trace);r[15]+=2} 
+  function thumb1(){                                    // Flags affected: NZ (LSL#0), NZC (others)
     nn = bit(instr, 6, 10);                             // get nn
     rs = bit(instr, 3, 5);                              // get Rs
     rd = bit(instr, 0, 2);                              // get Rd
     if(opcode == 0x0){                                  // if opcode == 00 (LSL - logical shift left)
       r[rd] = lshift(r[rs], nn);                        // Rd = Rs << nn
       /* debug */ trace += "LSL r" + rd + ",r" + rs + ",#0x" + nn.toString(16);
-      
     }
-    if(opcode == 0x1){                                  // if opcode == 00 (LSR - logical shift right)
+    else if(opcode == 0x1){                             // if opcode == 00 (LSR - logical shift right)
       r[rd] = rshift(r[rs], nn);                        // Rd = Rs >>> nn
       /* debug */ trace += "LSR r" + rd + ",r" + rs + ",#0x" + nn.toString(16);
     }
-    if(opcode == 0x2){                                  // if opcode == 00 (ASR - arithmetic shift right)
+    else if(opcode == 0x2){                             // if opcode == 00 (ASR - arithmetic shift right)
       r[rd] = r[rs] >> nn;                              // Rd = Rs >> nn
       /* todo: test */
       /* debug */ trace += "ASR r" + rd + ",r" + rs + ",#0x" + nn.toString(16);
     }
-    
-    if(r[rd] > 0xFFFFFFFF){                             // if Rd > 32 bits
-      cpsr |= 0x20000000;                               // CPSR.29 (bit 29 of CPSR - carry flag) = 1
-      r[rd] = bit(r[rd], 0, 31);                        // keep Rd 32-bit long
+
+    if(opcode != 0x0 || nn != 0){                       // If the operation isn't LSL#0
+      update_cpsr_c(rd);                                // update C flag
     }
-    else{                                               // else
-      cpsr &= 0xDFFFFFFF;                               // CPSR.29 = 0
-    }
-    
-    if(r[rd] == 0){                                     // if Rd == 0 
-      cpsr |= 0x40000000;                               // CPSR.30 (bit 30 of CPSR - Zero flag) = 1
-    }
-    else{                                               // else
-      cpsr &= 0xBFFFFFFF;                               // CPSR.30 = 0
-    }
+    update_cpsr_n(rd);                                  // update N flag
+    update_cpsr_z(rd);                                  // update Z flag
   }
-  function thumb2(){
+  function thumb2(){                                    // Flags affected: NZCV
     opcode = bit(instr, 9, 10);                         // get opcode (bits 9-10)
     rn = nn = bit(instr, 6, 8);                         // get Rn (value = 0-7) / nn (bits 6-8)
     rs = bit(instr, 3, 5);                              // get Rs (bits 3-5, value = 0-7)
@@ -397,94 +489,74 @@ function gba(file, canvas, progressbar){
     if(opcode == 0x0){                                  // if opcode == ADD (add register)
       r[rd] = r[rs] + r[rn];
       /* debug */ trace += "ADD R" + rd + ",R" + rs + ",R" + rn;
+      update_cpsr_c(rd);                                // update C flag
     }
     else if(opcode == 0x1){                             // if opcode == SUB (substract register)
-      /*if(debug) console.log("d      = " + (rd).toString(2));
-      if(debug) console.log("s      = " + (rs).toString(2));
-      if(debug) console.log("n      = " + (rn).toString(2));
-      if(debug) console.log("rd      = " + (r[rd]).toString(2));
-      if(debug) console.log("rs      = " + (r[rs]).toString(2));
-      if(debug) console.log("rn      = " + (r[rn]).toString(2));
-      if(debug) console.log("rs - rn = " + (r[rs] - r[rn]).toString(2));
-      if(debug) console.log("rs+rn'2 = " + (r[rs] + (Math.pow(2, r[rs].toString(2).length) - 1 - r[rn])).toString(2));*/
-
       r[rd] = r[rs] - r[rn];
       /* debug */ trace += "SUB R" + rd + ",R" + rs + ",R" + rn;
-
-      if(r[rs] - r[rn] < (r[rs] + (Math.pow(2, r[rs].toString(2).length) - 1 - r[rn]))){ // if the substraction (by adding the 2's complement) produces a carry
-        cpsr |= 0x20000000;                             // CPSR.29 (bit 29 of CPSR - carry flag) = 1
-        r[rd] = bit(r[rd], 0, 31);                      // keep Rd 32-bit long
-      }
-      else{                                             // else
-        cpsr &= 0xDFFFFFFF;                             // CPSR.29 = 0
-      }
-      
-      
+      update_cpsr_c_sub(r[rs], r[rn]);                  // update C flag
     }
     else if(opcode == 0x2){                             // if opcode == ADD (add immediate)
       if(nn == 0){                                      // if nn == 0
         /* debug */ trace += "THUMB 2";
-        // todo
       }
-      else{
+      else{                                             // if nn != 0
         /* debug */ trace += "THUMB 2";
       }
+      update_cpsr_c(rd);                                // update C flag
     }
     else if(opcode == 0x3){                             // if opcode == SUB (substract immediate)
       /* debug */ trace += "THUMB 2";
+      update_cpsr_c(rd);                                // update C flag
     }
+
+    update_cpsr_n(rd);                                  // update N flag
+    update_cpsr_z(rd);                                  // update Z flag
+    update_cpsr_v(rd);                                  // update V flag
+
   }
-  function thumb3(){
+  function thumb3(){                                    // Flags affected: NZ (MOV), NZCV (others)
     opcode = bit(instr, 11, 12);                        // get opcode (bits 11-12)
     rd = bit(instr, 8, 10);                             // get Rd (bits 8-10, value = 0..7)
     nn = bit(instr, 0, 7);                              // get nn (bits 0-7)
     if(opcode == 0x0){                                  // if opcode == MOV
       r[rd] = nn;
       /* debug */ trace += "MOV R" + rd + ",#0x" + nn.toString(16);
-      
-      // Update CPSR flags N, Z
-      if(r[rd] == 0){                                   // if Rd == 0
-        cpsr |= 0x40000000;                             // CPSR.30 (bit 30 of CPSR - Zero flag) = 1
-      }
-      else{                                             // else
-        cpsr &= 0xBFFFFFFF;                             // CPSR.30 = 0
-      }
     }
     else if(opcode == 0x1){
-      /* debug */ trace += "THUMB 3";
+      r[16] = r[rd] - nn;                               // void (R16) = Rd - nn
+      /* debug */ trace += "CMP R" + rd + ",#0x" + nn.toString(16);
+      update_cpsr_c_sub(r[rd],nn);                      // update C flag
+      update_cpsr_v(16);                                // update V flag
     }
     else if(opcode == 0x2){
-      /* debug */ trace += "THUMB 3";
+      r[rd] = r[rd] + nn;
+      /* debug */ trace += "ADD R" + rd + ",#0x" + nn.toString(16);
+      update_cpsr_c(rd);                                // update C flag
+      update_cpsr_v(rd);                                // update V flag
     }
     else if(opcode == 0x3){                             // if opcode == SUB
       r[rd] = r[rd] - nn;
       /* debug */ trace += "SUB R" + rd + ",#0x" + nn.toString(16);
-      
-      // Update CPSR flags N, Z, C, V
-      if(r[rd] == 0){                                   // if Rd == 0
-        cpsr |= 0x40000000;                             // CPSR.30 (bit 30 of CPSR - Zero flag) = 1
-      }
-      else{                                             // else
-        cpsr &= 0xBFFFFFFF;                             // CPSR.30 = 0
-      }
-
-      //if(debug) console.log("rd - nn = " + (r[rd] - nn).toString(2));
-      //if(debug) console.log("rd+nn'2 = " + (r[rd] + (Math.pow(2, r[rd].toString(2).length) - 1 - nn)).toString(2));
-      
-      if(r[rd] - nn < (r[rd] + (Math.pow(2, r[rd].toString(2).length) - 1 - nn))){ // if the substraction (by adding the 2's complement) produces a carry
-        cpsr |= 0x20000000;                             // CPSR.29 (bit 29 of CPSR - carry flag) = 1
-        r[rd] = bit(r[rd], 0, 31);                      // keep Rd 32-bit long
-      }
-      else{                                             // else
-        cpsr &= 0xDFFFFFFF;                             // CPSR.29 = 0
-      }
+      update_cpsr_c_sub(r[rd], nn);                     // update C flag
+      update_cpsr_v(rd);                                // update V flag
     }
+    update_cpsr_n(rd);                                  // update N flag
+    update_cpsr_z(rd);                                  // update Z flag
   }
-  function thumb4(){
+  function thumb4(){                                    // Flags affected: NZ (AND,EOR,TST,ORR,BIC,MVN), NZ and C=0 (MUL), NZ and C if non-zero shift (LSL,LSR,ASR,ROR), NZCV (others)
     opcode = bit(instr, 6, 9);                          // get opcode (bits 6-9)
     rs = bit(instr, 3, 5);                              // get Rs (bits 3-5, value = 0-7)
     rd = bit(instr, 0, 2);                              // get Rd (bits 0-2, value = 0-7)
     switch(opcode){
+      case 0xA:                                         // if opcode == CMP (compare)
+        r[16] = r[rd] - r[rs];                          // void = Rd - Rs
+        /* debug */ trace += "CMP R" + rd + ",R" + rs;
+        update_cpsr_c_sub(r[16], r[rs]);                // update C flag (substraction)
+        update_cpsr_v(16);                              // update V flag
+        rd = 16;                                        // artificially set Rd = void for flags updates at the end of the function. 
+
+        break;
       case 0xE:                                         // if opcode == BIC (bit clear)
         r[rd] = r[rd] & (0xFFFFFFFF - r[rs]);           // Rd = Rd AND NOT Rs
         /* debug */ trace += "BIC R" + rd + ",R" + rs;
@@ -492,8 +564,10 @@ function gba(file, canvas, progressbar){
       default:
         /* debug */ trace += "THUMB4";
     }
+    update_cpsr_n(rd);                                  // update N flag
+    update_cpsr_z(rd);                                  // update Z flag
   }
-  function thumb5(){
+  function thumb5(){                                    // Flags affected: NZCV (CMP), none (others)
     opcode = bit(instr, 8, 9);                          // get opcode (bits 6-9)
     msbd = bit(instr, 7);                               // get MSBd (bit 7)
     msbs = bit(instr, 6);                               // get MSBs (bit 6)
@@ -506,43 +580,123 @@ function gba(file, canvas, progressbar){
       /* debug */ trace += "THUMB 5";
     }
     else if(opcode == 2){                               // if opcode == MOV/NOP
-      /* debug */ trace += "THUMB 5";
+      if(rd == 8 && rs == 8){                           // MOV R8,R8 is NOP
+        /* debug */ trace += "NOP";
+      }
+      else{
+        r[rd] = r[rs];
+        /* debug */ trace += "MOV R" + rd + ",R" + rs;
+      }
     }
     else if(opcode == 3){                               // if opcode == BX/BLX and MSBd == 0
-      r[15] = ((rs == 14) ? (r[rs] & 0xFFFFFFFE) - 2    // if Rs == R14, PC = Rs 
-                          : (r[rs] & 0xFFFFFFFC) - 2);  // else, PC = (Rs with bits 0 and 1 cleared)             
-      cpsr &= 0xFFFFFFEF;                               // ARM mode: T (bit 5 of CPSR) = 0
+      if(rs == 14) r[15] = (r[rs] & 0xFFFFFFFE) - 2;    // if Rs == R14, PC = Rs
+      else if(rs == 0) r[15] = r[rs] - 3;               // if Rs == R0, PC = Rs
+      else r[15] = (r[rs] & 0xFFFFFFFC) - 2;            // else, PC = (Rs with bits 0 and 1 cleared) 
+      //cpsr &= 0xFFFFFFEF;                               // ARM mode: T (bit 5 of CPSR) = 0
       /* debug */ trace += "BX R" + rs;
+      /* todo: find the logic */
     }
   }
-  function thumb6(){
+  function thumb6(){                                    // No flags affected
     rd = bit(instr, 8, 10);                             // get Rd (bits 8-10)
     nn = bit(instr, 0, 7) * 4;                          // get nn (bits 0-7, values in steps of 4)
     r[rd] = mem(((r[15] + 4) & 0xFFFFFFFC) + nn, 4);    // Rd = WORD[PC+nn], with PC = PC+4 AND NOT 2
-    /* debug */ trace += "LDR r" + rd + ",=#" + mem(((r[15] + 4) & 0xFFFFFFFC) + nn, 4).toString(16);
+    /* debug */ trace += "LDR R" + rd + ",=#0x" + mem(((r[15] + 4) & 0xFFFFFFFC) + nn, 4).toString(16);
   }
-  function thumb7and8(){
+  function thumb7and8(){                                // No flags affected
+    /*opcode = bit(instr, 10, 11);                        // get opcode (bits 9-11) - bit 9 differenciates THUMB 7 and 8 opcodes, let's simplify and use it as a prefix.
+    ro = bit(instr, 6, 8);                              // get Ro (bits 6-8)
+    rb = bit(instr, 3, 5);                              // get Rb (bits 3-5)
+    rd = bit(instr, 0, 2);                              // get Rd (bits 0-2)
+    switch(opcode){
+      case 0x100:                                       // if opcode == STRH (store 16-bit data)
+        /* debug * / trace += "STRH R" + rd + ",[R" + rb + ",R" + ro + "]";
+        mem(r[rb] + r[ro], 2, r[rd]);                   // HALFWORD[Rb+Ro] = Rd
+
+    }
     /* debug */ trace += "THUMB 7/8";
   }
-  function thumb9(){
-    /* debug */ trace += "THUMB 9";
+  function thumb9(){                                    // No flags affected
+    opcode = bit(instr, 11, 12);                        // get opcode (bits 11-12)
+    nn = bit(instr, 6, 10);                             // get nn (bits 6-10)
+    rb = bit(instr, 3, 5);                              // get Rb (bits 3-5)
+    rd = bit(instr, 0, 2);                              // get Rd (bits 0-2)
+    if(opcode == 0x0){                                  // if opcode == STR
+      mem(r[rb] + nn, 4, r[rd]);
+      /* debug */ trace += "STR R" + rd + ",[R" + rb + (nn ? (",#0x" + nn) : "") + "]";
+    }
+    else if(opcode == 0x1){                             // if opcode == LDR
+      r[rd] = mem(r[rb] + nn, 4);
+      /* debug */ trace += "LDR R" + rd + ",[R" + rb + (nn ? (",#0x" + nn) : "") + "]";
+    }
+    else if(opcode == 0x2){                             // if opcode == STRB
+      /* debug */ trace += "THUMB 9";
+    }
+    else if(opcode == 0x3){                             // if opcode == LDRB
+      /* debug */ trace += "THUMB 9";
+    }
   }
-  function thumb10(){
-    /* debug */ trace += "THUMB 10";
+  function thumb10(){                                   // No flags affected
+    opcode = !!bit(instr, 11);                          // get opcode (bit 11)
+    nn = bit(instr, 6, 10);                             // get nn (bits 6-10)
+    rb = bit(instr, 3, 5);                              // get Rb (bits 3-5)
+    rd = bit(instr, 0, 2);                              // get Rd (bits 0-2)
+    if(opcode){
+    }
+    else{                                               // if opcode == STRH (store 16-bit data)
+      /* debug */ trace += "STRH R" + rd + ",[R" + rb + (nn ? ("," + nn) : "") + "]";
+      mem(r[rb] + nn, 2, r[rd]);                         // HALFWORD[Rb+Ro] = Rd
+    }
   }
-  function thumb11(){
+  function thumb11(){                                   // No flags affected
     /* debug */ trace += "THUMB 11";
   }
-  function thumb12(){
+  function thumb12(){                                   // No flags affected
     /* debug */ trace += "THUMB 12";
   }
-  function thumb13(){
+  function thumb13(){                                   // No flags affected
     /* debug */ trace += "THUMB 13";
   }
-  function thumb14(){
-    /* debug */ trace += "THUMB 14";
+  function thumb14(){                                   // No flags affected
+    opcode = !!bit(instr, 11);                          // get opcode (bit 11) as a boolean
+    pclr = !!bit(instr, 8);                             // get PC/LR bit (bit 8) as a boolean
+
+    /* debug */ trace += (opcode ? "POP" : "PUSH") + " {";
+
+    if(!opcode && pclr){                                // if opcode == PUSH and PC/LR bit == 1
+      r[13] -= 4;                                       // decrement R13
+      mem(r[13], 4, r[14]);                             // push LR (R14) too
+      /* debug */ trace += "R14,";
+    }
+
+    if(opcode){                                         // if opcode == POP
+      for(var i = 0; i < 8; i++){                       // for each register "i" (ascending order)
+        if(!!bit(instr, i)){                            // if Rlist.i (bit i of Rlist) == 1
+          r[i] = mem(r[13], 4);                         // load Ri from address R13 (SP)
+          r[13] += 4;                                   // increment R13
+          /* debug */ trace += "R" + i + ",";
+        }
+      }
+    }
+    else{                                               // if opcode == PUSH
+      for(var i = 7; i >= 0; i--){                      // for each register "i" (descending order)
+        if(!!bit(instr, i)){                            // if Rlist.i (bit i of Rlist) == 1
+          r[13] -= 4;                                   // decrement R13
+          mem(r[13], 4, r[i]);                          // store Ri at address R13 (SP)
+          /* debug */ trace += "R" + i + ",";
+        }
+      }
+    }
+
+    if(opcode && pclr){                                 // if opcode == POP and PC/LR bit == 1
+      mem(r[13], 4, r[14]);                             // pop PC (R15) too
+      r[13] += 4;                                       // increment R13
+      /* debug */ trace += "R15,";
+    }
+
+    /* debug */ trace = trace.substr(0, trace.length-1) + "}";
   }
-  function thumb15(){
+  function thumb15(){                                   // No flags affected
     opcode = !!bit(instr, 11);                          // get opcode as a boolean (bit 11)
     rb = bit(instr, 8, 10);                             // get Rb (bits 8-10, value = 0-7)
     /* debug */ trace += (opcode ? "LDMIA" : "STMIA") + " R" + rb + "!,{";
@@ -560,7 +714,7 @@ function gba(file, canvas, progressbar){
     }
     /* debug */ trace = trace.substr(0, trace.length-1) + "}";
   }
-  function thumb16(){
+  function thumb16(){                                   // No flags affected
     cond = bit(instr, 8, 11);                           // get cond (bits 8-11)
     nn = bit(instr, 0, 7) * 2;                          // get nn (bits 0-7, values in steps of 2, signed, -256..254)
     if(nn > 254){                                       // nn is signed, so after 254
@@ -581,60 +735,82 @@ function gba(file, canvas, progressbar){
 
     }
   }
-  function thumb17bkpt(){
+  function thumb17bkpt(){                               // No flags affected
     /* debug */ trace += "THUMB 17 BKPT";
   }
-  function thumb17swi(){
+  function thumb17swi(){                                // No flags affected
     /* debug */ trace += "THUMB 17 SWI";
   }
-  function thumb18(){
-    /* debug */ trace += "THUMB 18";
+  function thumb18(){                                   // No flags affected
+    offset = bit(instr, 0, 10) * 2;                     // get offset (bits 0-10, in steps of 2)
+    if(offset > 2046){
+      offset -= 4096;                                   // offset is signed
+    }
+    if(offset == -4){                                   // end of ROM - PC won't change
+      gameover = 1;
+    }
+    /* debug */ trace += "B #0x" + (r[15] + 4 + offset).toString(16);
+    r[15] = r[15] + 2 + offset;                         // PC = PC + 4 + offset
   }
-  function thumb19(){
+  function thumb19(){                                   // No flags affected
+
     // instruction 1
-    nn = bit(instr, 0, 10);                             // get nn
+    nn = bit(instr, 0, 10);                             // get nn (bits 0-10)
     r[14] = r[15] + 4 + lshift(nn, 12);                 // LR = PC + 4 + (nn << 12)
+
     // instruction 2
     r[15] += 2;                                         // place PC on next instruction
     instr = mem(r[15], 2);                              // read next instruction, at the address PC
-    trace = trace.substr(0, 23);
-    trace += instr.toString(16) + "   ";
-    nn = bit(instr, 0, 10);                             // get nn
+    /* debug */ trace = trace.substr(0, 21);
+    /* debug */ trace += instr.toString(16) + "    ";
+    nn = bit(instr, 0, 10);                             // get nn (bits 0-10)
+    nn = lshift(nn, 1);                                 // nn = nn << 1
     t = r[14];                                          // Backup LR
     r[14] = (r[15] + 2) | 0x1;                          // LR = (PC + 2) OR 1
-    r[15] = t + lshift(nn, 1) - 2;                      // PC = LR + (nn << 1)
+    if((t + nn - 2) > r[15] + 0x3FFFFE){                // the offset range is [-0x400000;+0x3FFFFE] so if we go over 0x3FFFFE
+      r[15] = t + nn - 2 - 0x800000;                    // PC = LR (backup) + (nn << 1) - 0x800000 (negative offset)
+    }
+    else{                                               // else
+      r[15] = t + nn - 2;                               // PC = LR (backup) + (nn << 1) (positive offset)
+    }
     opcode = bit(instr, 11, 15);                        // get opcode (bits 11-15)
-    
+
     if(opcode == 0x1F){                                 // if opcode == BL
       /* debug */ trace += "BL #0x" + (r[15] + 2).toString(16);
     }
-    else{                                               // else, opcode == BLX   
+    else{                                               // else, opcode == BLX 
       /* debug */ trace += "THUMB 19";
     }
   }
 
   /* Play the game ROM */
   function play(){
-    log("Instr    Address   Binary     ASM                      Trace");
-    for(var todo = 0; todo < 196720; todo++)
-    {
-      if(todo == 30) debug = false;
-      if(todo == 31) console.log("...");
-      if(todo == 196623) debug = true;
-      
-      t = todo + "     ";
-      t = t.substr(0, 6);
-      trace = t + "   ";
-      
-      // Execute THUMB instruction (bit 5 of CPSR = 1)
-      if(bit(cpsr, 5) == 0x1){
-        thumb();
+    if(debug) debug.innerHTML = "Instr   Address  Binary      ASM                      Trace";
+    interval = setInterval(function(){
+      for(ii = 0; ii < 10000; ii++)
+      {
+        instructions++;
+        if(instructions == 30){log("..."); displaydebug = false; }
+        if(instructions == 196623) displaydebug = true;
+        if(instructions == 196648){log("..."); displaydebug = false; }
+        if(instructions == 196666) displaydebug = true;
+        t = instructions + "     ";
+        t = t.substr(0, 6);
+        trace = t + " ";
+        // Execute THUMB instruction (bit 5 of CPSR = 1)
+        if(cpsr_t){
+          thumb();
+        }
+        // Execute ARM instruction (bit 5 of CPSR = 0)
+        else{
+          arm();
+        }
+        if(gameover){
+          ii = 10000;
+          clearInterval(interval);
+          return;
+        }
       }
-
-      // Execute ARM instruction (bit 5 of CPSR = 0)
-      else{
-        arm();
-      }
-    }
+    },0);
   }
 }

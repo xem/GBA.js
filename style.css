@@ -1,5 +1,5 @@
 /* GBA.js */
-body { background: #abcdef; text-align: center; font: normal 16px Arial; }
+body { background: #abcdef; text-align: center; font: normal 16px Arial; margin: 0; }
 #main { width: 480px; margin: 0 auto 5px; text-align: left; border: 1px solid black; padding: 15px 15px 5px; background: #def; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px; }
 #main.story { width: 720px }
 #main.story_index { text-align: center; }
@@ -16,6 +16,10 @@ article a:hover { font-weight: normal; letter-spacing: 0; }
 article { font-size: 14px; margin: 30px 0; text-align: justify; }
 article a, nav a, .story_index a { color: #20A }
 nav .right { float: right; }
+div.debug { margin: 0 auto; padding: 2px; background: #000; color: #fff; border: 3px solid #fff; position: fixed; bottom: 0; text-align: left; }
+div.debug.on { width: 100%; border: none; border-top: 3px solid #fff; }
+pre#debug { display: none; font: normal 11px monospace; }
+input.checked ~ pre#debug { display: block; width: 99.5%; height: 300px; margin: 2px 0; overflow: auto; border: 1px solid #fff; }
 
 /* prism.css */
 code[class*="language-"], pre[class*="language-"] { font-size: 12px; color: black; text-shadow: 0 1px white; font-family: Consolas, Monaco, 'Andale Mono', monospace; direction: ltr; text-align: left; white-space: pre; word-spacing: normal; -moz-tab-size: 4; -o-tab-size: 4; tab-size: 4; -webkit-hyphens: none; -moz-hyphens: none; -ms-hyphens: none; hyphens: none; }
