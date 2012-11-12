@@ -29,21 +29,7 @@
     progressbar.style.visibility = 'visible';           // Show the progressbar
   }
 
-/* HAND-OPTIMIZED CODE */
-xhr.addEventListener('progress', function(e){
- if(progressbar) progressbar.value = e.loaded / e.total;
-});
-xhr.open('GET', file);
-xhr.responseType = 'arraybuffer';
-xhr.onload = function(){
-  m[0x8] = typeof VBArray != 'undefined' ? VBArray(xhr.responseBody).toArray() : new Uint8Array(xhr.response);
-  progressbar.style.visibility = 'hidden';
-  play();
-}
-xhr.send();
-if(progressbar) progressbar.style.visibility = 'visible';
-
-/* CODE HANDLING IE10 */
+/* HAND-OPTIMIZED CODE (+ IE10 SUPPORT) */
 xhr.addEventListener('progress', function(e){
  if(progressbar) progressbar.value = e.loaded / e.total;
 });
@@ -57,11 +43,5 @@ xhr.onload = function(){
 xhr.send();
 if(progressbar) progressbar.style.visibility = 'visible';
 
-/* HUMAN-READABLE CODE MINIFIED */
-xhr.addEventListener("progress",function(a){progressbar&&(progressbar.value=a.loaded/a.total)});xhr.open("GET",file);xhr.responseType="arraybuffer";xhr.onload=function(){m[8]="undefined"!=typeof VBArray?VBArray(xhr.responseBody).toArray():new Uint8Array(xhr.response);progressbar&&(progressbar.style.visibility="hidden");play()};xhr.send();progressbar&&(progressbar.style.visibility="visible");
-
-/* HAND-OPTIMIZED CODE MINIFIED */
-xhr.addEventListener("progress",function(a){progressbar&&(progressbar.value=a.loaded/a.total)});xhr.open("GET",file);xhr.responseType="arraybuffer";xhr.onload=function(){m[8]="undefined"!=typeof VBArray?VBArray(xhr.responseBody).toArray():new Uint8Array(xhr.response);progressbar.style.visibility="hidden";play()};xhr.send();progressbar&&(progressbar.style.visibility="visible");
-
-/* CODE HANDLING IE10 MINIFIED */
+/* CODE MINIFIED */
 xhr.addEventListener("progress",function(a){progressbar&&(progressbar.value=a.loaded/a.total)});xhr.open("GET",file);xhr.responseType="arraybuffer";xhr.onload=function(){m[8]=(ie&&ie<10)?VBArray(xhr.responseBody).toArray():new Uint8Array(xhr.response);progressbar.style.visibility="hidden";play()};xhr.send();progressbar&&(progressbar.style.visibility="visible");

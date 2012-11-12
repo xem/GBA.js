@@ -14,6 +14,12 @@ function gba(file, canvas, progressbar, debug){
 
   /* Initializations (see "init.js") */
   var i,x,y,t,u,v,w,z,interval,ii,trace,instructions=0,xhr=new XMLHttpRequest,r=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],cpsr=16,cpsr_c,cpsr_n,cpsr_z,cpsr_v,cpsr_t,r_irq=[],cpsr_irq,r_fiq=[],cpsr_fiq,r_svc=[],cpsr_svc,r_abt=[],cpsr_abt,r_und=[],cpsr_und,m={2:[],3:[],4:[],5:[],6:[],7:[],8:[],14:[]},instr,cond,condname,opcode,mask,rn,rd,rs,rm,ro,nn,imm,sr,s,is,st,op,op2,cy,msbd,msbs,pclr,gameover;r[13]=50364160;r[15]=134217728;mem(67109E3,2,512);mem(67110914,2,3328);
+  
+  /* Canvas */
+  var ctx = canvas.getContext("2d");
+  
+  /* Bitmap (for mode 3) */
+  var imgData = ctx.createImageData(240, 160);
 
   /* Load the game ROM in memory (see "load.js") */
   xhr.addEventListener("progress",function(a){progressbar&&(progressbar.value=a.loaded/a.total)});xhr.open("GET",file);xhr.responseType="arraybuffer";xhr.onload=function(){m[8]=(ie&&ie<10)?VBArray(xhr.responseBody).toArray():new Uint8Array(xhr.response);progressbar.style.visibility="hidden";play()};xhr.send();progressbar&&(progressbar.style.visibility="visible");
@@ -62,10 +68,10 @@ function gba(file, canvas, progressbar, debug){
         break;
 
       case 0x6:
-        if(value) console.log(instructions + ": [" + address.toString(16) + "] = " + value.toString(16));
         address = (address - 0x6000000) % 0x20000;
         if(address > 0x17FFF && address < 0x20000)
           address -= 8000;
+        if(value) vram(address, value);
         break;
 
       case 0x7:
@@ -102,7 +108,11 @@ function gba(file, canvas, progressbar, debug){
     }
   }
 
-  /* I/O registers update */
+  /* I/O registers */
+  var dispcnt_k;
+  var dispcnt_m;
+  
+  /* I/O updates */
   function io(address, value){
     switch(address){
       case 0x0:
@@ -112,13 +122,26 @@ function gba(file, canvas, progressbar, debug){
     }
   }
 
+  /* Pixels colors */
+  var pr, pg, pb;
+
   /* VRAM update */
   function vram(address, value){
 
-  }
+    pr = bit(value, 0, 4) * 8;                          // get red value of pixel (bits 0-4)
+    pg = bit(value, 5, 9) * 8;                          // get green value of pixel (bits 5-9)
+    pb = bit(value, 10, 14) * 8;                        // get blue value of pixel (bits 10-14)
 
-  /* Cross-browser requestAnimationFrame (see "rAF.js") */
-  for(t=0,v=["ms","moz","webkit","o"],i=0;i<v.length&&!window.requestAnimationFrame;++i)window.requestAnimationFrame=window[v[i]+"RequestAnimationFrame"],window.a=window[v[i]+"CancelAnimationFrame"]||window[v[i]+"CancelRequestAnimationFrame"];window.requestAnimationFrame||(window.requestAnimationFrame=function(g){var d=(new Date).getTime(),e=Math.max(0,16-(d-t)),h=window.setTimeout(function(){g(d+e)},e);t=d+e;return h});
+    switch(dispcnt_m){
+      case 0x3:
+        console.log("vram[0x" + address.toString(16) + "] = rgba(" + pr + ", " + pg + ", " + pb + ", 255)");
+        imgData.data[address * 2] = pr;
+        imgData.data[address * 2 + 1] = pg;
+        imgData.data[address * 2 + 2] = pb;
+        imgData.data[address * 2 + 3] = 255;
+        break;
+    }
+  }
 
   /* ARM & THUMB operations (see "arm_thumb.js") */
   function check_cond(){cpsr_v=bit(cpsr,28);cpsr_c=bit(cpsr,29);cpsr_z=bit(cpsr,30);cpsr_n=bit(cpsr,31);condname="";0==cond&&(condname="EQ");1==cond&&(condname="NE");2==cond&&(condname="CS");3==cond&&(condname="CC");4==cond&&(condname="MI");5==cond&&(condname="PL");6==cond&&(condname="VS");7==cond&&(condname="VC");8==cond&&(condname="HI");9==cond&&(condname="LS");10==cond&&(condname="GE");11==cond&&(condname="LT");12==cond&&(condname="GT");13==cond&&(condname="LE");return 14==cond||0==cond&&1==cpsr_z|| 1==cond&&0==cpsr_z||2==cond&&1==cpsr_c||3==cond&&0==cpsr_c||4==cond&&1==cpsr_n||5==cond&&0==cpsr_n||6==cond&&1==cpsr_v||7==cond&&0==cpsr_v||8==cond&&1==cpsr_c&&0==cpsr_z||9==cond&&(0==cpsr_c||1==cpsr_z)||10==cond&&cpsr_n==cpsr_v||11==cond&&cpsr_n!=cpsr_v||12==cond&&0==cpsr_z&&cpsr_n==cpsr_v||13==cond&&(1==cpsr_z||cpsr_n!=cpsr_v)?!0:!1}
@@ -808,6 +831,7 @@ function gba(file, canvas, progressbar, debug){
         if(gameover){
           ii = 10000;
           clearInterval(interval);
+          ctx.putImageData(imgData, 0, 0);
           return;
         }
       }

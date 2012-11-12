@@ -1,5 +1,5 @@
 /* GBA.js */
-body { background: #abcdef; text-align: center; font: normal 16px Arial; margin: 0; }
+body { background: #abcdef; text-align: center; font: normal 16px Arial; margin: 0; padding: 20px 0 0; }
 #main { width: 480px; margin: 0 auto 5px; text-align: left; border: 1px solid black; padding: 15px 15px 5px; background: #def; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px; }
 #main.story { width: 720px }
 #main.story_index { text-align: center; }

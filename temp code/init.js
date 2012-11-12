@@ -75,7 +75,6 @@ msbs,                                                   // Most significant bit 
 pclr,                                                   // Include PC/LR in PUSH/POP instructions
 gameover;                                               // ROM end
 
-
 // CPU registers default values
 r[13] = 0x3007F00;                                      // default SR value, when processor mode is "user"
 r[15] = 0x8000000;                                      // defaunt PC value, when playing from Game Pak ROM
@@ -85,5 +84,4 @@ mem(0x4000088, 2, 0x0200);                              // SOUNDBIAS
 mem(0x4000802, 2, 0x0D00);                              // REG_IMC_H
   
 /* MINIFIED CODE */
-var i,x,y,t,u,v,w,z,trace,xhr=new XMLHttpRequest,r=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],cpsr=16,cpsr_c,cpsr_n,cpsr_z,cpsr_v,r_irq=[],cpsr_irq,r_fiq=[],cpsr_fiq,r_svc=[],cpsr_svc,r_abt=[],cpsr_abt,r_und=[],cpsr_und,m={2:[],3:[],4:[],5:[],6:[],7:[],8:[],14:[]},instr,cond,condname,opcode,mask,rn,rd,rs,rm,nn,imm,sr,s,is,st,op,op2,cy,msbd,msbs;r[13]=50364160;r[15]=134217728;mem(67109E3,2,512);mem(67110914,2,3328);
 var i,x,y,t,u,v,w,z,interval,ii,trace,instructions=0,xhr=new XMLHttpRequest,r=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],cpsr=16,cpsr_c,cpsr_n,cpsr_z,cpsr_v,cpsr_t,r_irq=[],cpsr_irq,r_fiq=[],cpsr_fiq,r_svc=[],cpsr_svc,r_abt=[],cpsr_abt,r_und=[],cpsr_und,m={2:[],3:[],4:[],5:[],6:[],7:[],8:[],14:[]},instr,cond,condname,opcode,mask,rn,rd,rs,rm,ro,nn,imm,sr,s,is,st,op,op2,cy,msbd,msbs,pclr,gameover;r[13]=50364160;r[15]=134217728;mem(67109E3,2,512);mem(67110914,2,3328);

@@ -3,7 +3,7 @@ GBA.js
 
 A GameBoy Advance (GBA) emulator in your browser!
 
-Online demo and making-of available on http://xem.github.com/GBA.js.
+Online demo available on http://xem.github.com/GBA.js.
 
 Here's the HTML code needed to use it:
 
@@ -23,14 +23,14 @@ Here's the HTML code needed to use it:
 
 Progress:
 
-    - Gather free GBA homebrews:  done! (694 ROMs used with authorization)              705Mb
-    - Initializations:            done! (Global vars, default registers)                0,379Kb
-    - ROM Loader:                 done! (AJAX, conversion in bytes array, IE9 fix)      0,379Kb
-    - Memory read/write :         done! (Little-Endian, 8/16/32bit, mask, mirrors)      0,586Kb
-    - Binary operations:          done! (Left/right shift, rotation, bit extraction)    0,236Kb
-    - Main loop:                  20%   (loop, dispatch ARM/THUMB instructions)         0,198Kb
-    - CPU ARM/THUMB instructions: 40%   (ARM 3/4/5~/6/7/9 done - THUMB 1-6~,15,16,19~)  6,286kb
-    - Graphics:                   10%   (requestAnimationFrame polyfill)                0,423Kb
+    - Gather free GBA homebrews:  done! (694 ROMs used with authorization, 1 ROM runs!)
+    - Initializations:            done! (Global vars, default registers, canvas)
+    - ROM Loader:                 done! (AJAX load, conversion in bytes array, IE fix)
+    - Memory read/write :         done! (Little-Endian, 1/2/4byte, mask, mirror, IO, VRAM)
+    - Binary operations:          done! (Left/right shift, rotation, bit extraction)
+    - Main loop:                  30%   (loop, dispatch ARM/THUMB instructions, end)
+    - CPU ARM/THUMB instructions: 50%   (ARM 3,4,5,6,9 - THUMB 1-10, 14-16,18,19)
+    - Graphics:                   15%   (requestAnimationFrame, MODE 3)
     - BIOS funtions:              0%
     - Controls:                   0%
     - Sound:                      0%
@@ -38,3 +38,8 @@ Progress:
     - Save/load:                  0%
     - Multiplayer:                0%
     - Read zips:                  0%
+
+
+GBA.js also aims to be as light as possible:
+the emulator (and its debugger) takes just one file, just one function,
+and its code minified and gzipped is currently under 3.5ko!
