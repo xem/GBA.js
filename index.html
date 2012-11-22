@@ -18,8 +18,8 @@
     <select id=games>
       <option value="">Choose a GBA ROM...</option>
       <optgroup label="Tonc examples">
-        <option value="roms/Tonc/first.gba" selected>First demo (3 pixels)</option>
-        <option value="roms/Tonc/m3_demo.gba" disabled>Mode 3 demo</option>
+        <option value="roms/Tonc/first.gba">First demo</option>
+        <option value="roms/Tonc/m3_demo.gba" selected>Mode 3 demo</option>
         <option value="roms/Tonc/pageflip.gba" disabled>Page flip</option>
         <option value="roms/Tonc/bm_modes.gba" disabled>Bitmap modes</option>
         <option value="" disabled>more soon</option>
@@ -68,8 +68,8 @@
   <!--<a href="making-of">Making-of</a> - -->
   <a href="http://github.com/xem/gba.js">GitHub</a>
 
-  <div class="debug">
-    Debug <input onclick="if(this.className=='checked'){this.className='';this.parentNode.className='debug off'}else{this.className='checked';this.parentNode.className='debug on'}" type=checkbox>
+  <div class="debug on">
+    Debug <input onclick="if(this.className=='checked'){this.className='';this.parentNode.className='debug off'}else{this.className='checked';this.parentNode.className='debug on'}" type=checkbox checked class=checked>
     <pre id=debug></pre>
   </div>
 </body>

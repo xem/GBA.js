@@ -22,12 +22,19 @@ function gba(file, canvas, progressbar, debug){
   var imgData = ctx.createImageData(240, 160);
 
   /* Load the game ROM in memory (see "load.js") */
-  xhr.addEventListener("progress",function(a){progressbar&&(progressbar.value=a.loaded/a.total)});xhr.open("GET",file);xhr.responseType="arraybuffer";xhr.onload=function(){m[8]=(ie&&ie<10)?VBArray(xhr.responseBody).toArray():new Uint8Array(xhr.response);progressbar.style.visibility="hidden";play()};xhr.send();progressbar&&(progressbar.style.visibility="visible");
+  xhr.addEventListener("progress",function(a){progressbar&&(progressbar.value=a.loaded/a.total)});xhr.open("GET",file);xhr.responseType="arraybuffer";xhr.onload=function(){m[8]=new Uint8Array(xhr.response);progressbar.style.visibility="hidden";play()};xhr.send();progressbar&&(progressbar.style.visibility="visible");
 
   /* Debug */
   var displaydebug = true;
-  function log(s){if(debug&&displaydebug)debug.innerHTML += "<br>" + s}
-  function trace_r(){while(trace.length<54)trace+=" ";trace+=";NZCV:";for(i=31;i>27;i--)trace+=bit(cpsr,i);for(i=0;i<15;i++)if(i<8||i>12)trace+=" R"+i+":"+("0000000"+(r[i]||0).toString(16)).substr(("0000000"+(r[i]||0).toString(16)).length-8,("0000000"+(r[i]||0).toString(16)).length)}
+  function log(s){if(debug&&displaydebug)debug.innerHTML += "<br>"+s;}
+  function trace_r(){if(trace.indexOf("THUMB")>0)alert(instructions);while(trace.length<54)trace+=" ";trace+=";NZCV:";for(i=31;i>27;i--)trace+=bit(cpsr,i);for(i=0;i<15;i++)if(i<8||i>7){if(r[i]<0||r[i]>0xFFFFFFFF)alert(instructions);trace+=" R"+i+":"+("0000000"+(r[i]||0).toString(16)).substr(("0000000"+(r[i]||0).toString(16)).length-8,("0000000"+(r[i]||0).toString(16)).length);
+    /* debug * / trace += "<br>";
+    for(var k = 0x3007EFC; k > 0x3007EFC - 15*4; k-=4){
+      trace += k.toString(16) + ": " + mem(k, 4).toString(16) + "<br>";
+    }
+    /* debug * / trace += "<br>";
+    /* debug * / trace += "<br>";*/
+  }}
 
   /* CPSR operations (see "cpsr.js") */
   function update_cpsr_n(a){cpsr=bit(r[a],31)?cpsr|2147483648:cpsr&2147483647}
@@ -71,7 +78,7 @@ function gba(file, canvas, progressbar, debug){
         address = (address - 0x6000000) % 0x20000;
         if(address > 0x17FFF && address < 0x20000)
           address -= 8000;
-        if(value) vram(address, value);
+        if(value) vram(address, value, bytes);
         break;
 
       case 0x7:
@@ -94,7 +101,7 @@ function gba(file, canvas, progressbar, debug){
         address = (address - 0xE000000) % 0x1000000;
         break;
     }
-    if(value)
+    if(value !== undefined)
       for(i = 0; i < bytes; i++, value = rshift(value, 8), mask = rshift(mask, 8))
       {
         m[prefix][address + i] = ((m[prefix][address + i] || 0) & (0xFF - (mask & 0xFF))) + (value & (mask & 0xFF));
@@ -124,21 +131,33 @@ function gba(file, canvas, progressbar, debug){
 
   /* Pixels colors */
   var pr, pg, pb;
+  var pr2, pg2, pb2;
 
   /* VRAM update */
-  function vram(address, value){
-
+  function vram(address, value, bytes){
     pr = bit(value, 0, 4) * 8;                          // get red value of pixel (bits 0-4)
     pg = bit(value, 5, 9) * 8;                          // get green value of pixel (bits 5-9)
     pb = bit(value, 10, 14) * 8;                        // get blue value of pixel (bits 10-14)
+    
+    if(bytes == 4){                                     // If 4 bytes are set, 2 pixels are drawn
+      pr2 = bit(value, 0, 4) * 8;                       // get red value of pixel 2 (bits 0-4)
+      pg2 = bit(value, 5, 9) * 8;                       // get green value of pixel 2 (bits 5-9)
+      pb2 = bit(value, 10, 14) * 8;                     // get blue value of pixel 2 (bits 10-14)
+    }
 
     switch(dispcnt_m){
-      case 0x3:
-        console.log("vram[0x" + address.toString(16) + "] = rgba(" + pr + ", " + pg + ", " + pb + ", 255)");
-        imgData.data[address * 2] = pr;
-        imgData.data[address * 2 + 1] = pg;
-        imgData.data[address * 2 + 2] = pb;
-        imgData.data[address * 2 + 3] = 255;
+      case 0x3:                                         // in mode 3
+        imgData.data[address * 2] = pr;                 // set the pixel's red value
+        imgData.data[address * 2 + 1] = pg;             // set the pixel's green value
+        imgData.data[address * 2 + 2] = pb;             // set the pixel's blue value
+        imgData.data[address * 2 + 3] = 255;            // set the pixel's alpha value (totally opaque)
+        
+        if(bytes == 4){                                 // if we draw 2 pixels
+          imgData.data[address * 2 + 4] = pr2;          // set the pixel 2's red value
+          imgData.data[address * 2 + 5] = pg2;          // set the pixel 2's green value
+          imgData.data[address * 2 + 6] = pb2;          // set the pixel 2's blue value
+          imgData.data[address * 2 + 7] = 255;          // set the pixel 2's alpha value (totally opaque)
+        }
         break;
     }
   }
@@ -485,8 +504,11 @@ function gba(file, canvas, progressbar, debug){
     rs = bit(instr, 3, 5);                              // get Rs
     rd = bit(instr, 0, 2);                              // get Rd
     if(opcode == 0x0){                                  // if opcode == 00 (LSL - logical shift left)
-      r[rd] = lshift(r[rs], nn);                        // Rd = Rs << nn
+      r[rd] = lshift(r[rs], nn) & 0xFFFFFFFF;           // Rd = Rs << nn
       /* debug */ trace += "LSL r" + rd + ",r" + rs + ",#0x" + nn.toString(16);
+      if(r[rd] < 0){
+        r[rd] = 0xFFFFFFFF + r[rd] + 1;
+      }
     }
     else if(opcode == 0x1){                             // if opcode == 00 (LSR - logical shift right)
       r[rd] = rshift(r[rs], nn);                        // Rd = Rs >>> nn
@@ -512,31 +534,41 @@ function gba(file, canvas, progressbar, debug){
     if(opcode == 0x0){                                  // if opcode == ADD (add register)
       r[rd] = r[rs] + r[rn];
       /* debug */ trace += "ADD R" + rd + ",R" + rs + ",R" + rn;
+      if(r[rd] < 0){
+        r[rd] = 0xFFFFFFFF + r[rd] + 1;
+      }
       update_cpsr_c(rd);                                // update C flag
     }
     else if(opcode == 0x1){                             // if opcode == SUB (substract register)
       r[rd] = r[rs] - r[rn];
       /* debug */ trace += "SUB R" + rd + ",R" + rs + ",R" + rn;
+      if(r[rd] < 0){
+        r[rd] = 0xFFFFFFFF + r[rd] + 1;
+      }
       update_cpsr_c_sub(r[rs], r[rn]);                  // update C flag
     }
     else if(opcode == 0x2){                             // if opcode == ADD (add immediate)
-      if(nn == 0){                                      // if nn == 0
-        /* debug */ trace += "THUMB 2";
+      if(nn == 0){                                      // if nn == 0 (MOV alias)
+        /* debug */ trace += "MOV R" + rd + ",R" + rs;
       }
-      else{                                             // if nn != 0
-        /* debug */ trace += "THUMB 2";
+      else{                                             // if nn != 0 (ADD)
+        /* debug */ trace += "ADD R" + rd + ",R" + rs + ",#0x" + nn.toString(16);
+      }
+      r[rd] = r[rs] + nn;                               // Rd=Rs+nn
+      if(r[rd] < 0){
+        r[rd] = 0xFFFFFFFF + r[rd] + 1;
       }
       update_cpsr_c(rd);                                // update C flag
     }
     else if(opcode == 0x3){                             // if opcode == SUB (substract immediate)
-      /* debug */ trace += "THUMB 2";
-      update_cpsr_c(rd);                                // update C flag
+      r[rd] = r[rs] - nn;                               // Rd=Rs-nn
+      /* debug */ trace += "SUB R" + rd + ",R" + rs + ",#0x" + nn.toString(16);
+      update_cpsr_c_sub(r[rs], nn);                     // update C flag
     }
 
     update_cpsr_n(rd);                                  // update N flag
     update_cpsr_z(rd);                                  // update Z flag
     update_cpsr_v(rd);                                  // update V flag
-
   }
   function thumb3(){                                    // Flags affected: NZ (MOV), NZCV (others)
     opcode = bit(instr, 11, 12);                        // get opcode (bits 11-12)
@@ -572,13 +604,25 @@ function gba(file, canvas, progressbar, debug){
     rs = bit(instr, 3, 5);                              // get Rs (bits 3-5, value = 0-7)
     rd = bit(instr, 0, 2);                              // get Rd (bits 0-2, value = 0-7)
     switch(opcode){
+      case 0x9:                                         // if opcode == NEG (negate)
+        r[rd] = 0xFFFFFFFF - r[rs] + 1;                 // Rd = 0 - Rs (equivalent)
+        /* debug */ trace += "NEG R" + rd + ",R" + rs;
+        break;
       case 0xA:                                         // if opcode == CMP (compare)
         r[16] = r[rd] - r[rs];                          // void = Rd - Rs
         /* debug */ trace += "CMP R" + rd + ",R" + rs;
-        update_cpsr_c_sub(r[16], r[rs]);                // update C flag (substraction)
+        update_cpsr_c_sub(r[rd], r[rs]);                // update C flag (substraction)
         update_cpsr_v(16);                              // update V flag
         rd = 16;                                        // artificially set Rd = void for flags updates at the end of the function. 
-
+        break;
+      case 0xC:                                         // if opcode == ORR (OR logical)
+        r[rd] = r[rd] | r[rs];                          // Rd = Rd OR Rs
+        /* debug */ trace += "ORR R" + rd + ",R" + rs;
+        break;
+      case 0xD:                                         // if opcode == MUL (multiply)
+        r[rd] = r[rd] * r[rs];
+        cpsr &= 0xDFFFFFFF;                             // CPSR.29 (bit 29 of CPSR - carry flag) = 0
+        /* debug */ trace += "MUL R" + rd + ",R" + rs;
         break;
       case 0xE:                                         // if opcode == BIC (bit clear)
         r[rd] = r[rd] & (0xFFFFFFFF - r[rs]);           // Rd = Rd AND NOT Rs
@@ -586,6 +630,7 @@ function gba(file, canvas, progressbar, debug){
         break;
       default:
         /* debug */ trace += "THUMB4";
+        break;
     }
     update_cpsr_n(rd);                                  // update N flag
     update_cpsr_z(rd);                                  // update Z flag
@@ -597,7 +642,11 @@ function gba(file, canvas, progressbar, debug){
     rs = lshift(msbs, 3) + bit(instr, 3, 5);            // get Rs (bits 3-5, value = 0-15 including MSBs)
     rd = lshift(msbd, 3) + bit(instr, 0, 2);            // get Rd (bits 0-2, value = 0-15 including MSBd)
     if(opcode == 0){                                    // if opcode == ADD
-      /* debug */ trace += "THUMB 5";
+      r[rd] += r[rs] & 0xFFFFFFFF;                      // Rd = Rd + Rs (and stay on 32 bits)
+      /* debug */ trace += "ADD R" + rd + ",R" + rs;
+      if(r[rd] < 0){
+        r[rd] = 0xFFFFFFFF + r[rd] + 1;
+      }
     }
     else if(opcode == 1){                               // if opcode == CMP
       /* debug */ trace += "THUMB 5";
@@ -609,6 +658,9 @@ function gba(file, canvas, progressbar, debug){
       else{
         r[rd] = r[rs];
         /* debug */ trace += "MOV R" + rd + ",R" + rs;
+        if(r[rd] < 0){
+          r[rd] = 0xFFFFFFFF + r[rd] + 1;
+        }
       }
     }
     else if(opcode == 3){                               // if opcode == BX/BLX and MSBd == 0
@@ -627,17 +679,18 @@ function gba(file, canvas, progressbar, debug){
     /* debug */ trace += "LDR R" + rd + ",=#0x" + mem(((r[15] + 4) & 0xFFFFFFFC) + nn, 4).toString(16);
   }
   function thumb7and8(){                                // No flags affected
-    /*opcode = bit(instr, 10, 11);                        // get opcode (bits 9-11) - bit 9 differenciates THUMB 7 and 8 opcodes, let's simplify and use it as a prefix.
+    opcode = bit(instr, 9, 11);                        // get opcode (bits 9-11) - bit 9 differenciates THUMB 7 and 8 opcodes, let's simplify and use it as a prefix.
     ro = bit(instr, 6, 8);                              // get Ro (bits 6-8)
     rb = bit(instr, 3, 5);                              // get Rb (bits 3-5)
     rd = bit(instr, 0, 2);                              // get Rd (bits 0-2)
     switch(opcode){
-      case 0x100:                                       // if opcode == STRH (store 16-bit data)
-        /* debug * / trace += "STRH R" + rd + ",[R" + rb + ",R" + ro + "]";
+      case 0x1:                                         // if opcode == STRH (store 16-bit data)
+        /* debug */ trace += "STRH R" + rd + ",[R" + rb + ",R" + ro + "]";
         mem(r[rb] + r[ro], 2, r[rd]);                   // HALFWORD[Rb+Ro] = Rd
-
+        break;
+      default:
+        /* debug */ trace += "THUMB 7 / 8";
     }
-    /* debug */ trace += "THUMB 7/8";
   }
   function thumb9(){                                    // No flags affected
     opcode = bit(instr, 11, 12);                        // get opcode (bits 11-12)
@@ -672,15 +725,33 @@ function gba(file, canvas, progressbar, debug){
     }
   }
   function thumb11(){                                   // No flags affected
-    /* debug */ trace += "THUMB 11";
+    rd = bit(instr, 8, 10);                             // get Rd (bits 8-10)
+    nn = bit(instr, 0, 7) * 4;                          // get Rd (bits 0-7, in steps of 4)
+    if(!!bit(instr, 11)){                               // if opcode == LDR (load register)
+      r[rd] = mem(r[13] + nn, 4);                       // Rd = WORD[SP+nn]
+      /* debug */ trace += "LDR R" + rd + ",[SP" + (nn ? ",#0x" + nn.toString(16) : "") + "]";
+    }
+    else{                                               // if opcode == STR
+      mem(r[13] + nn, 4, r[rd]);                        // WORD[SP+nn] = Rd
+      /* debug */ trace += "STR R" + rd + ",[SP" + (nn ? ",#0x" + nn.toString(16) : "") + "]";
+    }
   }
   function thumb12(){                                   // No flags affected
     /* debug */ trace += "THUMB 12";
   }
   function thumb13(){                                   // No flags affected
-    /* debug */ trace += "THUMB 13";
+    nn = bit(instr, 0, 6) * 4;                          // get nn (bits 0-6, signed, in steps of 4)
+    if(!!bit(instr, 7)){                                // if sign == ninus
+      r[13] -= nn;                                      // SP = SP - nn
+      /* debug */ trace += "ADD SP, -#0x" + nn.toString(16);
+    }
+    else{                                               // if sign == plus
+      r[13] += nn;                                      // SP = SP + nn
+      /* debug */ trace += "ADD SP, #0x" + nn.toString(16);
+    }
   }
   function thumb14(){                                   // No flags affected
+    //displaydebug = true;
     opcode = !!bit(instr, 11);                          // get opcode (bit 11) as a boolean
     pclr = !!bit(instr, 8);                             // get PC/LR bit (bit 8) as a boolean
 
@@ -810,13 +881,39 @@ function gba(file, canvas, progressbar, debug){
   function play(){
     if(debug) debug.innerHTML = "Instr   Address  Binary      ASM                      Trace";
     interval = setInterval(function(){
-      for(ii = 0; ii < 10000; ii++)
+      for(ii = 0; ii < 5000; ii++)
       {
         instructions++;
-        if(instructions == 30){log("..."); displaydebug = false; }
-        if(instructions == 196623) displaydebug = true;
-        if(instructions == 196648){log("..."); displaydebug = false; }
-        if(instructions == 196666) displaydebug = true;
+        
+        // Debugging first.gba
+        if(file == "roms/Tonc/first.gba"){
+          if(instructions == 31){log("..."); displaydebug = false; }
+          if(instructions == 196623) displaydebug = true;
+          if(instructions == 196648){log("..."); displaydebug = false; }
+          if(instructions == 196666) displaydebug = true;
+        }
+        
+        if(file == "roms/Tonc/m3_demo.gba"){
+          if(instructions == 1) log("...");
+          if(instructions == 1) displaydebug = false;
+          
+          //if(instructions == 344836) displaydebug = true;
+          //if(instructions == 344837) log("=== HERE C SHOULD BE 0 (TO SEE LATER) ===");
+          //if(instructions == 344861) log("=== HERE C SHOULD BE 0 (TO SEE LATER) ===");
+          
+          //if(instructions == 346500)displaydebug = true;
+          //if(instructions == 346700)gameover = 1;
+          
+          //if(instructions == 346400) displaydebug = true; // here r0 is wrong at some point
+          //if(instructions == 346680) gameover = 1;
+
+          if(instructions == 162700) displaydebug = true;
+          if(instructions == 163080) gameover = 1;
+          
+          //if(r[15] == 0x800031C) alert(instructions);
+
+        }
+        
         t = instructions + "     ";
         t = t.substr(0, 6);
         trace = t + " ";
@@ -829,12 +926,13 @@ function gba(file, canvas, progressbar, debug){
           arm();
         }
         if(gameover){
-          ii = 10000;
+          ii = 5000;
           clearInterval(interval);
           ctx.putImageData(imgData, 0, 0);
           return;
         }
       }
+      ctx.putImageData(imgData, 0, 0);
     },0);
   }
 }

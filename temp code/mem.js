@@ -243,7 +243,7 @@ function mem(address, bytes, value, mask){
       address = (address - 0xE000000) % 0x1000000;
       break;
   }
-  if(value)
+  if(value !== undefined)
     for(i = 0; i < bytes; i++, value = rshift(value, 8), mask = rshift(mask, 8))
     {
       m[prefix][address + i] = ((m[prefix][address + i] || 0) & (0xFF - (mask & 0xFF))) + (value & (mask & 0xFF));
