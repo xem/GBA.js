@@ -3,17 +3,47 @@
 <head>
   <meta charset=utf-8>
   <title>GBA.js</title>
-  <script src=GBA.js></script>
-  <link rel=stylesheet href=style.css>
+  <!--
+  <script src="src/gba.js"></script>
+  <script src="src/gba.play.js"></script>
+  <script src="src/gba.convert.js"></script>
+  <script src="src/gba.loop.js"></script>
+  <script src="src/gba.arm.js"></script>
+  <script src="src/gba.thumb.js"></script>
+  <script src="src/gba.mem.js"></script>
+  <script src="src/gba.bin.js"></script>
+  <script src="src/gba.vram.js"></script>
+  -->
+  <script src="gba.min.js"></script>
 </head>
 <body>
-
+  <style>
+    body { background: #abcdef; text-align: center; font: normal 16px Arial; margin: 0; padding: 20px 0 0; }
+    #main { width: 480px; margin: 0 auto 5px; text-align: left; border: 1px solid black; padding: 15px 15px 5px; background: #def; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px; }
+    #main.story { width: 720px }
+    #main.story_index { text-align: center; }
+    h1 { font-size: 50px; text-align: center; margin: 0; }
+    h2 { color: #555; font-size: 20px; text-align: center; }
+    h3 { color: #555; font-size: 16px; text-align: center; margin: 0; }
+    #stop { visibility: hidden }
+    progress { visibility: hidden; float: right; }
+    canvas { display: block; margin: 90px auto; -webkit-transform: scale(2); -moz-transform: scale(2); -ms-transform: scale(2); transform: scale(2); background: #000; border: 1px solid #000; }
+    .canvas-fallback { width: 480px; height: 160px; padding-top: 160px; text-align: center; background: #000; color: #fff; }
+    a { color: #000 }
+    a:hover { font-weight: bold; letter-spacing: -0.5px; }
+    article a:hover { font-weight: normal; letter-spacing: 0; }
+    article { font-size: 14px; margin: 30px 0; text-align: justify; }
+    article a, nav a, .story_index a { color: #20A }
+    nav .right { float: right; }
+    div.debug { margin: 0 auto; padding: 2px; background: #000; color: #fff; border: 3px solid #fff; position: fixed; bottom: 0; text-align: left; }
+    div.debug.on { width: 100%; border: none; border-top: 3px solid #fff; }
+    pre#debug { display: none; font: normal 11px monospace; }
+    input.checked ~ pre#debug { display: block; width: 99.5%; height: 300px; margin: 2px 0; overflow: auto; border: 1px solid #fff; }
+  </style>
   <div id=main>
-
     <h1>GBA.js</h1>
-    <h3>A Gameboy Advance emulator in JavaScript</h3>
+    <h3>A Gameboy Advance emulator in HTML5 & JavaScript</h3>
     <br>
-
     <!-- games list -->
     <select id=games>
       <option value="">Choose a GBA ROM...</option>
@@ -37,40 +67,26 @@
         <option disabled>soon</option>
       </optgroup>
     </select>
-    <input type=button value=play onclick="
-      var g=document.getElementById('games'),
-      s=document.getElementById('stop'),
-      c=document.getElementById('screen'),
-      p=document.getElementById('progress');
-      d=document.getElementById('debug');
-      if(g.value){
-        gba(g.value, c, p, d);
-        this.style.display='none';
-        g.style.display='none';
-        s.style.visibility='visible'
-      }
-    ">
-    <input type=button value=stop id=stop onclick="window.location='.'">
-
+    <!-- buttons -->
+    <input type=button value=play onclick="GBA.play(g.value, c, p); this.style.display='none'; g.style.display='none'; s.style.visibility='visible'">
+    <input type=button value=stop id=stop onclick="window.location='index.html'">
     <!-- loading progress -->
     <progress id=progress></progress>
-
     <!-- screen -->
     <canvas id=screen width=240 height=160>
       <div class=canvas-fallback>Update your browser!</div>
     </canvas>
-
   </div>
-
   <!-- links -->
   <a href="http://twitter.com/MaximeEuziere">@MaximeEuziere</a>
   -
-  <!--<a href="making-of">Making-of</a> - -->
-  <a href="http://github.com/xem/gba.js">GitHub</a>
-
-  <div class="debug on">
-    Debug <input onclick="if(this.className=='checked'){this.className='';this.parentNode.className='debug off'}else{this.className='checked';this.parentNode.className='debug on'}" type=checkbox checked class=checked>
-    <pre id=debug></pre>
-  </div>
+  <a href="http://github.com/xem/GBA.js">GitHub</a>
+  <script>
+    var g = document.getElementById('games'),
+        s = document.getElementById('stop'),
+        c = document.getElementById('screen'),
+        p = document.getElementById('progress'),
+        d = document.getElementById('debug');
+  </script>
 </body>
 </html>
