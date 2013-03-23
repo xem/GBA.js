@@ -16,7 +16,6 @@ GBA.convert = function(){
   f,                                                      // function to call
   address;                                                // address
 
-
   // Extract words
   for(i = 0; i < GBA.m[8].length; i += 4){                // for each word of the ROM:
     for(instr = 0, j = 4; j; j--){                        // for each byte to read:

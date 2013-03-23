@@ -6,9 +6,10 @@ GBA = {
   // Emulator globals
   canvas: 0,                                              // canvas 2D
   pixels: 0,                                              // pixels map
+  worker: 0,                                              // Web Worker
   trace: "",                                              // debug
-  loops: 0,                                               // loop detection
-  thumb: 0,                                               // THUMB mode
+  loops: 0,                                               // loop counter
+  thumb: 0,                                               // THUMB mode shortcut
   stopped: false,                                         // stopped (game over)
 
   // GBA globals

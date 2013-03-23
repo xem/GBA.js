@@ -3,9 +3,9 @@
 <head>
   <meta charset=utf-8>
   <title>GBA.js</title>
-  <!--
-  <script src="src/gba.js"></script>
   <script src="src/gba.play.js"></script>
+  <script src="src/gba.js"></script>
+  <script src="src/gba.load.js"></script>
   <script src="src/gba.convert.js"></script>
   <script src="src/gba.loop.js"></script>
   <script src="src/gba.arm.js"></script>
@@ -13,8 +13,9 @@
   <script src="src/gba.mem.js"></script>
   <script src="src/gba.bin.js"></script>
   <script src="src/gba.vram.js"></script>
-  -->
+  <!--
   <script src="gba.min.js"></script>
+  -->
 </head>
 <body>
   <style>
@@ -48,8 +49,8 @@
     <select id=games>
       <option value="">Choose a GBA ROM...</option>
       <optgroup label="Tonc examples">
-        <option value="roms/Tonc/first.gba">First demo</option>
-        <option value="roms/Tonc/m3_demo.gba" selected>Mode 3 demo</option>
+        <option value="roms/Tonc/first.gba" selected>First demo</option>
+        <option value="roms/Tonc/m3_demo.gba">Mode 3 demo</option>
         <option value="roms/Tonc/pageflip.gba" disabled>Page flip</option>
         <option value="roms/Tonc/bm_modes.gba" disabled>Bitmap modes</option>
         <option value="" disabled>more soon</option>
@@ -68,7 +69,7 @@
       </optgroup>
     </select>
     <!-- buttons -->
-    <input type=button value=play onclick="GBA.play(g.value, c, p); this.style.display='none'; g.style.display='none'; s.style.visibility='visible'">
+    <input type=button value=play onclick="play(g.value, c, p); this.style.display='none'; g.style.display='none'; s.style.visibility='visible'">
     <input type=button value=stop id=stop onclick="window.location='index.html'">
     <!-- loading progress -->
     <progress id=progress></progress>

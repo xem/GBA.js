@@ -52,7 +52,7 @@ GBA.mem = function(address, bytes, value, mask){
         address -= 8000;
       }
       if(value !== undefined){                            // if the VRAM is written
-        GBA.vram(address, value, bytes);                      // update canvas
+        GBA.vram_worker(address, value, bytes);           // update canvas
       }
       break;
 

@@ -3,6 +3,7 @@
 ********/
 
 GBA.vram = function(address, value, bytes){
+
   var pr, pg, pb, pr2, pg2, pb2;                          // temp color values
 
   pr = GBA.bit(value, 0, 4) * 8;                          // get red value of pixel (bits 0-4)
@@ -27,7 +28,7 @@ GBA.vram = function(address, value, bytes){
         GBA.pixels.data[address * 2 + 5] = pg2;           // set the pixel 2's green value
         GBA.pixels.data[address * 2 + 6] = pb2;           // set the pixel 2's blue value
         GBA.pixels.data[address * 2 + 7] = 255;           // set the pixel 2's alpha value (totally opaque)
-  //    }
+      }
   //    break;
-  }
+  // }
 }

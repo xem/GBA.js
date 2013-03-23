@@ -2,10 +2,13 @@
   Loop
 ********/
 GBA.loop = function(){
+  // DEBUG: start
+  var date1 = new Date().getTime();
+
   var i, j, k;                                            // iterators
 
   // DEBUG: legend
-  console.log("     # Address Assembler                 N Z C V r0       r1       r2       r3       r4       r5       r6       r7       r8       r9       r10      r11      r12      r13 (SP) r14 (LR) cpsr");
+  //console.log("     # Address Assembler                 N Z C V r0       r1       r2       r3       r4       r5       r6       r7       r8       r9       r10      r11      r12      r13 (SP) r14 (LR) cpsr");
 
   // Loop to execute opcodes
   for(
@@ -24,8 +27,6 @@ GBA.loop = function(){
         console.log(j + " thumb is undefined");
       }
       GBA.rom_thumb[j][0](GBA.rom_thumb[j][1]);
-      // DEBUG: when was that?
-      //if(GBA.rom_thumb[j][0] == GBA.thumb_add_rrn) console.log((j*2).toString(16));
     }
 
     // ARM opcode
@@ -34,6 +35,7 @@ GBA.loop = function(){
       GBA.rom_arm[j][0](GBA.rom_arm[j][1]);
     }
 
+    /*
     // DEBUG: don't display trace during loops
     if(GBA.loops === -1 && i > 366000){
       console.log("loops...");
@@ -61,7 +63,7 @@ GBA.loop = function(){
 
     // DEBUG: game over
     if(GBA.stopped === true){
-      GBA.canvas.putImageData(GBA.pixels, 0, 0);
+      //GBA.canvas.putImageData(GBA.pixels, 0, 0);
       GBA.loops = 2;
       break;
     }
@@ -70,19 +72,18 @@ GBA.loop = function(){
     if(i === 366000){
       console.log("========== OK ==========");
       GBA.loops = 0;
-      GBA.canvas.putImageData(GBA.pixels, 0, 0);
+      //GBA.canvas.putImageData(GBA.pixels, 0, 0);
     }
-    
-    // DEBUG: stop loop
-    // if(i === 254350){
-     // GBA.loops = 0;
-    // }
-    
+    */
   }
-  
-  // DEBUG
-  GBA.canvas.putImageData(GBA.pixels, 0, 0);
+
+  // DEBUG: end
+  //GBA.canvas.putImageData(GBA.pixels, 0, 0);
+  /*
   if(GBA.loops > 2 && !GBA.stopped){
     console.log("unfinished loops...");
   }
+  var date2 = new Date().getTime();
+  console.log("Executed " + i + " instructions in " + Math.abs(date2 - date1) + "ms");
+  */
 }
