@@ -1,0 +1,4 @@
+/** trace() **/
+function trace(){
+
+}

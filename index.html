@@ -3,90 +3,123 @@
 <head>
   <meta charset=utf-8>
   <title>GBA.js</title>
-  <!--
-  <script src="src/gba.js"></script>
-  <script src="src/gba.play.js"></script>
-  <script src="src/gba.convert.js"></script>
-  <script src="src/gba.loop.js"></script>
-  <script src="src/gba.arm.js"></script>
-  <script src="src/gba.thumb.js"></script>
-  <script src="src/gba.mem.js"></script>
-  <script src="src/gba.bin.js"></script>
-  <script src="src/gba.vram.js"></script>
-  -->
-  <script src="gba.min.js"></script>
+	<style>
+		* { margin: 0; padding: 0; -moz-box-sizing: border-box; box-sizing: border-box; font: normal 12px/14px monospace }
+		table { width: 100%; max-height: 580px }
+		html, body { overflow: hidden }
+		b { font-weight: bold; padding: 0 10px }
+		h1 { font-size: 36px }
+		table { border-collapse: collapse; border: 2px solid #ddd }
+		td { border: 2px solid #ddd; vertical-align: baseline; white-space: pre }
+		#arm, #thumb { height: 580px; width: 50%; min-width: 300px }
+    a#thumb { display: none }
+		#arm div, #thumb div { height: 580px; overflow: auto; padding: 0 10px }
+		#registers { max-width: 100px; padding: 0 10px }
+		#flags { max-width: 100px; padding: 0 10px }
+		#screen { min-width: 490px; height: 330px; position: relative; background: #000; color: #fff; text-align: center; vertical-align: middle }
+		canvas { border: 1px solid red; position: absolute; top: 25%; left: 25%; -moz-transform: scale(2); -webkit-transform: scale(2); transform: scale(2) }
+	  #ram div { height: 250px; overflow: auto; padding: 0 10px }
+		#rom, button { width: 120px; margin: 5px 0 }
+		#stopaddress { width: 70px; margin: 5px 0 }
+	</style>
 </head>
 <body>
-  <style>
-    body { background: #abcdef; text-align: center; font: normal 16px Arial; margin: 0; padding: 20px 0 0; }
-    #main { width: 480px; margin: 0 auto 5px; text-align: left; border: 1px solid black; padding: 15px 15px 5px; background: #def; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px; }
-    #main.story { width: 720px }
-    #main.story_index { text-align: center; }
-    h1 { font-size: 50px; text-align: center; margin: 0; }
-    h2 { color: #555; font-size: 20px; text-align: center; }
-    h3 { color: #555; font-size: 16px; text-align: center; margin: 0; }
-    #stop { visibility: hidden }
-    progress { visibility: hidden; float: right; }
-    canvas { display: block; margin: 90px auto; -webkit-transform: scale(2); -moz-transform: scale(2); -ms-transform: scale(2); transform: scale(2); background: #000; border: 1px solid #000; }
-    .canvas-fallback { width: 480px; height: 160px; padding-top: 160px; text-align: center; background: #000; color: #fff; }
-    a { color: #000 }
-    a:hover { font-weight: bold; letter-spacing: -0.5px; }
-    article a:hover { font-weight: normal; letter-spacing: 0; }
-    article { font-size: 14px; margin: 30px 0; text-align: justify; }
-    article a, nav a, .story_index a { color: #20A }
-    nav .right { float: right; }
-    div.debug { margin: 0 auto; padding: 2px; background: #000; color: #fff; border: 3px solid #fff; position: fixed; bottom: 0; text-align: left; }
-    div.debug.on { width: 100%; border: none; border-top: 3px solid #fff; }
-    pre#debug { display: none; font: normal 11px monospace; }
-    input.checked ~ pre#debug { display: block; width: 99.5%; height: 300px; margin: 2px 0; overflow: auto; border: 1px solid #fff; }
-  </style>
-  <div id=main>
-    <h1>GBA.js</h1>
-    <h3>A Gameboy Advance emulator in HTML5 & JavaScript</h3>
-    <br>
-    <!-- games list -->
-    <select id=games>
-      <option value="">Choose a GBA ROM...</option>
-      <optgroup label="Tonc examples">
-        <option value="roms/Tonc/first.gba">First demo</option>
-        <option value="roms/Tonc/m3_demo.gba" selected>Mode 3 demo</option>
-        <option value="roms/Tonc/pageflip.gba" disabled>Page flip</option>
-        <option value="roms/Tonc/bm_modes.gba" disabled>Bitmap modes</option>
-        <option value="" disabled>more soon</option>
-      </optgroup>
-      <optgroup label="DevKitARM examples">
-        <option value="roms/DevKitARM/basic_sound.gba" disabled>Basic_sound</option>
-        <option value="roms/DevKitARM/PlayBoyScout_mb.gba" disabled>PlayBoyScout</option>
-        <option value="roms/DevKitARM/ansi_console.gba" disabled>Ansi_console</option>
-        <option value="roms/DevKitARM/PCXView.gba" disabled>PCXView</option>
-        <option value="roms/DevKitARM/SimpleBGScroll_mb.gba" disabled>SimpleBGScroll</option>
-        <option value="roms/DevKitARM/sprite.gba" disabled>Sprite</option>
-        <option value="roms/DevKitARM/template_mb.gba" disabled>Template</option>
-      </optgroup>
-      <optgroup label="GBAnews homebrews">
-        <option disabled>soon</option>
-      </optgroup>
-    </select>
-    <!-- buttons -->
-    <input type=button value=play onclick="GBA.play(g.value, c, p); this.style.display='none'; g.style.display='none'; s.style.visibility='visible'">
-    <input type=button value=stop id=stop onclick="window.location='index.html'">
-    <!-- loading progress -->
-    <progress id=progress></progress>
-    <!-- screen -->
-    <canvas id=screen width=240 height=160>
-      <div class=canvas-fallback>Update your browser!</div>
-    </canvas>
-  </div>
-  <!-- links -->
-  <a href="http://twitter.com/MaximeEuziere">@MaximeEuziere</a>
-  -
-  <a href="http://github.com/xem/GBA.js">GitHub</a>
+  <table>
+		<tr>
+			<td rowspan=2 id=arm><b>ROM (ARM)</b>
+<div id=arminner></div></td>
+			<td rowspan=2 id=thumb><b>ROM (THUMB)</b>
+<div id=thumbinner></div></td>
+			<td colspan=3 id=screen>
+<h1>GBA.js</h1>
+				<canvas id=canvas0 width=240 height=160></canvas>
+				<canvas id=canvas1 width=240 height=160></canvas>
+				<canvas id=canvas2 width=240 height=160></canvas>
+				<canvas id=canvas3 width=240 height=160></canvas>
+			</td>
+		</tr>
+		<tr>
+			<td id=registers>r0    <span id=r0>00000000</span>
+r1    <span id=r1>00000000</span>
+r2    <span id=r2>00000000</span>
+r3    <span id=r3>00000000</span>
+r4    <span id=r4>00000000</span>
+r5    <span id=r5>00000000</span>
+r6    <span id=r6>00000000</span>
+r7    <span id=r7>00000000</span>
+r8    <span id=r8>00000000</span>
+r9    <span id=r9>00000000</span>
+r10   <span id=r10>00000000</span>
+r11   <span id=r11>00000000</span>
+r12   <span id=r12>00000000</span>
+r13   <span id=r13>03007F00</span>
+r14   <span id=r14>00000000</span>
+r15   <span id=r15>08000000</span>
+cpsr  <span id=cpsr>0000001F</span>
+spsr  <span id=spsr>00000000</span>
+void  <span id=void>00000000</span></td>
+			<td id=flags>
+<input type=checkbox id=flagz> z  <input type=checkbox id=flagi> i
+<input type=checkbox id=flagn> n  <input type=checkbox id=flagf> f
+<input type=checkbox id=flagc> c  <input type=checkbox id=flagt> t
+<input type=checkbox id=flagv> v  <input type=checkbox id=flagq> q
+
+<select id=rom>
+  <option value="roms/Tonc/first.gba" selected>first</option>
+  <option value="roms/tonc/m3_demo.gba">mode 3</option>
+  <option value="roms/tonc/pageflip.gba">page flip</option>
+</select>
+<button onclick="load($('rom').value);$('rom').disabled='disabled';this.disabled='disabled';$('convert').disabled='';$('trace').disabled='';$('play').disabled='';">Load</button>
+<button id=convert disabled onclick="convert_all();this.disabled='disabled'" title="optional">Convert all</button>
+<button id=trace disabled>Trace</button>
+<button id=play disabled>Play</button>
+Stop @ <input id=stopaddress value=08000000></td>
+			<td id=ram><b>RAM</b>
+<div id=raminner></div></td>
+		</tr>
+	</table>
+  <script>debug=1</script>
+  <script src=shortcuts.js></script>
+  <script src=setup.js></script>
+  <script src=load.js></script>
+  <script src=convert.js></script>
+  <script src=trace.js></script>
+  <script src=play.js></script>
+  <script src=mem.js></script>
+  <script src=opcodes.js></script>
   <script>
-    var g = document.getElementById('games'),
-        s = document.getElementById('stop'),
-        c = document.getElementById('screen'),
-        p = document.getElementById('progress'),
-        d = document.getElementById('debug');
+    // Show ARM code debugger
+    html = "";
+    for(i = 0x8000000; i <= 0x8001000; i += 4){
+      if((i > 0x8000000 && i < 0x80000C0) || (i > 0x80000C0 && i < 0x80000E0)){
+        continue;
+      }
+      html += "<span id=armaddress" + hex(i) + ">" + hex(i) + "</span>  <span id=armvalue" + hex(i) + ">00000000</span>  <span id=armname" + hex(i) + ">?</span>\n";
+      if(i == 0x8000000 || i == 0x80000C0){
+        html += "*** ROM header ***\n";
+      }
+    }
+    $("arminner").innerHTML = html;
+    
+    // Show THUMB code debugger
+    html = "";
+    for(i = 0x8000000; i <= 0x8001000; i += 2){
+      if(i == 0x8000000){
+        html += "*** ROM header ***\n";
+      }
+      if(i < 0x80000E0){
+        continue;
+      }
+      html += "<span id=thumbaddress" + hex(i) + ">" + hex(i) + "</span>  <span id=thumbvalue" + hex(i) + ">0000</span>  <span id=thumbname" + hex(i) + ">?</span>\n";
+    }
+    $("thumbinner").innerHTML = html;
+    
+    // Show IWRAM debugger
+    html = "";
+    for(i = 0x3008000; i >= 0x3000000; i -= 4){
+      html += hex(i) + "  <span id=memory" + hex(i) + ">00000000</span>\n";
+    }
+    $("raminner").innerHTML = html;
   </script>
 </body>
 </html>
