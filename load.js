@@ -3,16 +3,27 @@
 // @param p: the ROM's path
 function load(p){
 
+  // Vars
+  var i, xhr;
+
   // Use AJAX to read the ROM as an arraybuffer
   xhr = new XMLHttpRequest;
   xhr.open('GET', p);
   xhr.responseType = 'arraybuffer';
   xhr.send();
   xhr.onload = function(){
-    
+
+    // Add it to the memory
     m[8] = xhr.response;
-    m8[8] = new Uint8Array(m[8]);
-    m16[8] = new Uint16Array(m[8]);
-    m32[8] = new Uint32Array(m[8]);
+
+    // Create 8-bits, 16-bits and 32-bits views of the 8 memory sections
+    for(i = 0; i < 16; i++){
+      if(m[i]){
+        m8[i] = new Uint8Array(m[i]);
+        m16[i] = new Uint16Array(m[i]);
+        m32[i] = new Uint32Array(m[i]);
+      }
+    }
+
   }
 }

@@ -1,3 +1,4 @@
+/** Opcodes **/
 // ARM3
 arm_bx = function(p){
   // trace += "BX r" + p[0];
@@ -44,7 +45,7 @@ arm_msr_cpsr = function(p){
 }
 
 arm_msr_spsr = function(p){
-  
+
 }
 
 // ARM7
@@ -59,7 +60,7 @@ arm_str_rrn = function(p){
 
 arm_ldr_rrn = function(p){
   // trace += "LDR r" + p[0] + ",=#0x" + mem(r[p[1]] + ((p[1] == 15) ? 8 : 0) + p[2], 4).toString(16);
-  // r[p[0]] = 
+  // r[p[0]] =
   // mem(r[p[1]] + ((p[1] == 15) ? 8 : 0) + p[2], 4);// Rd = [Rn +/- offset]
   // r[15] += 4;
 }
@@ -358,7 +359,7 @@ thumb_str_spn = function(p){
 
 thumb_ldr_spn = function(p){
   // trace += "LDR R" + p[0] + ",[SP" + (p[1] ? (",#0x" + p[1].toString(16)) : "") + "]";
-  // r[p[0]] = mem(r[13] + p[1], 4);             // Rd = WORD[SP+nn] 
+  // r[p[0]] = mem(r[13] + p[1], 4);             // Rd = WORD[SP+nn]
   // r[15] += 2;
 }
 

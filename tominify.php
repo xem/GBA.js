@@ -25,12 +25,13 @@ function minify($buffer){
 ob_start();
 
 include("shortcuts.js");
-include("setup.js");
+include("cpu.js");
+include("memory.js");
+include("screen.js");
 include("load.js");
 include("convert.js");
 include("trace.js");
 include("play.js");
-include("mem.js");
 include("opcodes.js");
 
 $out = ob_get_contents();

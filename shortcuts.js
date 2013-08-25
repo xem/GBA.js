@@ -1,7 +1,8 @@
+/** Shortcut functions **/
+
 /** $() **/
 // Select an element
 // @param i: the element's id.
-
 function $(i){
   return document.getElementById(i);
 }
@@ -10,7 +11,6 @@ function $(i){
 // Write a number in hexadecimal
 // @param n: the number
 // @param i: the length of the hexadecimal value (default: auto)
-
 function hex(n,i){
   if(i){
     return ("0000000" + n.toString(16).toUpperCase()).slice(-i);

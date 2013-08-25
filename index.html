@@ -4,23 +4,25 @@
   <meta charset=utf-8>
   <title>GBA.js</title>
 	<style>
-		* { margin: 0; padding: 0; -moz-box-sizing: border-box; box-sizing: border-box; font: normal 12px/14px monospace }
-		table { width: 100%; max-height: 580px }
+		* { margin: 0; padding: 0; -moz-box-sizing: border-box; box-sizing: border-box; font: normal 12px/13px monospace }
+		table { width: 100%; max-height: 565px }
 		html, body { overflow: hidden }
 		b { font-weight: bold; padding: 0 10px }
 		h1 { font-size: 36px }
 		table { border-collapse: collapse; border: 2px solid #ddd }
 		td { border: 2px solid #ddd; vertical-align: baseline; white-space: pre }
-		#arm, #thumb { height: 580px; width: 50%; min-width: 300px }
+		#arm, #thumb { height: 565px; width: 50%; min-width: 300px }
     a#thumb { display: none }
-		#arm div, #thumb div { height: 580px; overflow: auto; padding: 0 10px }
+		#arm div, #thumb div { height: 565px; overflow: auto; padding: 0 10px }
 		#registers { max-width: 100px; padding: 0 10px }
-		#flags { max-width: 100px; padding: 0 10px }
-		#screen { min-width: 490px; height: 330px; position: relative; background: #000; color: #fff; text-align: center; vertical-align: middle }
-		canvas { border: 1px solid red; position: absolute; top: 25%; left: 25%; -moz-transform: scale(2); -webkit-transform: scale(2); transform: scale(2) }
-	  #ram div { height: 250px; overflow: auto; padding: 0 10px }
-		#rom, button { width: 120px; margin: 5px 0 }
+		#flags { max-width: 100px }
+    #flags div { padding: 2px 10px }
+		#screen { min-width: 490px; height: 330px; background: #000; position: relative; color: #fff; text-align: center; vertical-align: middle }
+		canvas { border: 1px solid red; position: absolute; top: 83px; right: 123px; -moz-transform: scale(2); -webkit-transform: scale(2); transform: scale(2) }
+	  #ram div { height: 235px; overflow: auto; padding: 0 10px }
+		#rom, button { width: 120px; margin: 5px 5px 0 0 }
 		#stopaddress { width: 70px; margin: 5px 0 }
+    b, button { font-family: arial }
 	</style>
 </head>
 <body>
@@ -58,34 +60,36 @@ r15   <span id=r15>08000000</span>
 cpsr  <span id=cpsr>0000001F</span>
 spsr  <span id=spsr>00000000</span>
 void  <span id=void>00000000</span></td>
-			<td id=flags>
-<input type=checkbox id=flagz> z  <input type=checkbox id=flagi> i
+			<td id=flags><b>Flags</b>
+<div><input type=checkbox id=flagz> z  <input type=checkbox id=flagi> i
 <input type=checkbox id=flagn> n  <input type=checkbox id=flagf> f
 <input type=checkbox id=flagc> c  <input type=checkbox id=flagt> t
-<input type=checkbox id=flagv> v  <input type=checkbox id=flagq> q
-
-<select id=rom>
+<input type=checkbox id=flagv> v  <input type=checkbox id=flagq> q</div>
+<b>ROM controls</b>
+<div><select id=rom>
+  <option>Choose a ROM...</option>
   <option value="roms/Tonc/first.gba" selected>first</option>
   <option value="roms/tonc/m3_demo.gba">mode 3</option>
   <option value="roms/tonc/pageflip.gba">page flip</option>
 </select>
 <button onclick="load($('rom').value);$('rom').disabled='disabled';this.disabled='disabled';$('convert').disabled='';$('trace').disabled='';$('play').disabled='';">Load</button>
-<button id=convert disabled onclick="convert_all();this.disabled='disabled'" title="optional">Convert all</button>
+<button id=convert disabled onclick="convert_all();this.disabled='disabled'" title="optional">Convert</button>
 <button id=trace disabled>Trace</button>
 <button id=play disabled>Play</button>
-Stop @ <input id=stopaddress value=08000000></td>
+Stop @ <input id=stopaddress value=08000000></div></td>
 			<td id=ram><b>RAM</b>
 <div id=raminner></div></td>
 		</tr>
 	</table>
   <script>debug=1</script>
   <script src=shortcuts.js></script>
-  <script src=setup.js></script>
+  <script src=cpu.js></script>
+  <script src=memory.js></script>
+  <script src=screen.js></script>
   <script src=load.js></script>
   <script src=convert.js></script>
   <script src=trace.js></script>
   <script src=play.js></script>
-  <script src=mem.js></script>
   <script src=opcodes.js></script>
   <script>
     // Show ARM code debugger
