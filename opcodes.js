@@ -1,4 +1,5 @@
 /** Opcodes **/
+
 // ARM3
 arm_bx = function(p){
   // trace += "BX r" + p[0];
@@ -563,3 +564,4 @@ thumb_bl = function(p){
   // r[15] = p[0];                                           // PC = address
 }
 */
+

@@ -1,6 +1,10 @@
-/** load() **/
-// Load a ROM, put its data in m8 and convert it in ARM and THUMB instructions.
-// @param p: the ROM's path
+/** ROM loader **/
+
+/*
+ * load()
+ * Load a ROM, save it in the memory and create different views
+ * @param p: the ROM's path
+ */
 function load(p){
 
   // Vars
@@ -11,9 +15,11 @@ function load(p){
   xhr.open('GET', p);
   xhr.responseType = 'arraybuffer';
   xhr.send();
+  
+  // When it is loaded:
   xhr.onload = function(){
 
-    // Add it to the memory
+    // Add it in the memory
     m[8] = xhr.response;
 
     // Create 8-bits, 16-bits and 32-bits views of the 8 memory sections
@@ -24,6 +30,6 @@ function load(p){
         m32[i] = new Uint32Array(m[i]);
       }
     }
-
   }
 }
+

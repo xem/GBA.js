@@ -1,14 +1,19 @@
 /** Memory **/
-// The memory (m) contains 8 useful parts.
-// Each part is a bytes array representing an address range:
-// m2: on-board WRAM. (256kb)
-// m3: on-chip WRAM. (32kb)
-// m4: I/O registers. (1kb)
-// m5: palette RAM. (1kb)
-// m6: VRAM. (96kb)
-// m7: OBJ attributes. (1kb)
-// m8: Game Pak ROM. (32mb)
-// mE: Game Pak SRAM. (64kb)
+
+/*
+ * The memory (m) contains 8 useful parts.
+ * Each part is an ArrayBuffer representing an address range:
+ * m2: on-board WRAM. (256kb)
+ * m3: on-chip WRAM. (32kb)
+ * m4: I/O registers. (1kb)
+ * m5: palette RAM. (1kb)
+ * m6: VRAM. (96kb)
+ * m7: OBJ attributes. (1kb)
+ * m8: Game Pak ROM. (32mb)
+ * mE: Game Pak SRAM. (64kb)
+ *
+ * m8, m16 and m32 will contain 8-bit, 16-bit and 32-bit views of the memory.
+ */
 m = [
   ,,
   new ArrayBuffer(256 * 1024),
@@ -21,12 +26,20 @@ m = [
   new ArrayBuffer(64 * 1024)
 ];
 
-// m8, m16 and m32 contain 8-bit, 16-bit and 32-bit views of the memory.
 m8 = [];
 m16 = [];
 m32 = [];
 
-/** mem() **/
+/*
+ * mem()
+ * read or write data in the memory.
+ * @param address: the address to read or write.
+ * @param bytes: the length of the value to read or write, in bytes (1, 2 or 4).
+ * @param value (optional): the value to write.
+ * @param mask (optional): the bit mask to apply to the written value.
+ * @return: if a value is specified, it is written in memory.
+ *          Else, the the read value is returned.
+ */
 function mem(address, bytes, value, mask){
 
   // Vars
@@ -113,3 +126,4 @@ function mem(address, bytes, value, mask){
     return view[prefix][address / bytes] || 0;
   }
 }
+

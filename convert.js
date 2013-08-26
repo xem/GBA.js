@@ -1,9 +1,12 @@
 /** ROM conversion **/
-// The ROM is interpreted as:
-// ARM instructions (32-bit).
-// THUMB instructions (16-bit).
-// These arrays contain each opcode's function, params and assembler code.
-// ARM opcodes are conditional, their conditions are stored in a fourth array.
+
+/*
+ * The ROM is interpreted as:
+ * ARM instructions (32-bit).
+ * THUMB instructions (16-bit).
+ * These arrays contain each opcode's function, params and assembler code.
+ * ARM opcodes are conditional, their conditions are stored in a fourth array.
+ */
 arm_opcode = [];
 arm_params = [];
 arm_asm = [];
@@ -13,22 +16,36 @@ thumb_opcode = [];
 thumb_params = [];
 thumb_asm = [];
 
-/** convertAll() **/
-// For debug purpose only
-// Convert all the ROM in ARM and THUMB instructions
+/*
+ * convert_all()
+ * For debug purpose only, optional.
+ * Try to convert all the ROM in ARM and THUMB instructions.
+ * Invalid results when it's used on data or on the wrong instruction set. 
+ */
 function convert_all(){
+  // Vars
+  var i;
+  
+  // ARM
   for(i = 0; i < m32[8].length; i++){
     convert_ARM(i);
   }
+  
+  // THUMB
   for(i = 0; i < m16[8].length; i++){
     convert_THUMB(i);
   }
 }
 
-/** convertARM(a,t) **/
-// Convert a 32-bit instruction to ARM and Assembler code.
-// @param i: the instruction to convert (as an index of m32)
+/*
+ * convert_ARM(a,t)
+ * Convert a 32-bit instruction to ARM and Assembler code.
+ * @param i: the instruction to convert (as an index of m32).
+ */
 function convert_ARM(i){
+
+  // Vars
+  var cond, condname, opcode, mask, op2;
 
   // Default ASM value: unknown.
   arm_asm[i] = "?";
@@ -106,8 +123,7 @@ function convert_ARM(i){
   // is: bit(instr, 7, 11),
   // st: bit(instr, 5, 6),
   // rm: bit(instr, 0, 3),
-  // nn: bit(instr, 0, 11),
-  // address: 0.
+  // nn: bit(instr, 0, 11)
   else if(bit(instr, 26, 27) === 0x1){
 
     // LDR / STR Rd, Imm (if Rn = PC)
@@ -314,6 +330,11 @@ function convert_ARM(i){
   }
 }
 
+/*
+ * convert_THUMB(a,t)
+ * Convert a 16-bit instruction to THUMB and Assembler code.
+ * @param i: the instruction to convert (as an index of m16).
+ */
 function convert_THUMB(a){
 
 /*
@@ -971,3 +992,4 @@ function convert_THUMB(a){
   }
 */
 }
+

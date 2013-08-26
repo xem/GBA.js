@@ -24,16 +24,29 @@ function minify($buffer){
 }
 ob_start();
 
-include("shortcuts.js");
-include("cpu.js");
-include("memory.js");
-include("screen.js");
-include("load.js");
-include("convert.js");
-include("trace.js");
-include("play.js");
-include("opcodes.js");
+include("../shortcuts.js");
+include("../cpu.js");
+include("../memory.js");
+include("../screen.js");
+include("../load.js");
+include("../convert.js");
+include("../trace.js");
+include("../play.js");
+include("../opcodes.js");
 
 $out = ob_get_contents();
 ob_end_clean();
+?>
+/******************************************\
+*   _____   ____                  _        *
+*  / ____| |  _ \     /\         (_)       *
+* | |  __  | |_) |   /  \         _   ___  *
+* | | |_ | |  _ <   / /\ \       | | / __| *
+* | |__| | | |_) | / ____ \   _  | | \__ \ *
+*  \_____| |____/ /_/    \_\ (_) | | |___/ *
+*                               _/ |       *
+*  == A HTML5 GBA EMULATOR ==  |__/        *
+\******************************************/
+
+<?php
 echo minify($out);

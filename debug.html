@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>GBA.js</title>
+	<style>
+		* { margin: 0; padding: 0; -moz-box-sizing: border-box; box-sizing: border-box; font: normal 12px/13px monospace }
+		table { width: 100%; max-height: 565px }
+		html, body { overflow: hidden }
+		b { font-weight: bold; padding: 0 10px }
+		h1 { font-size: 36px }
+		table { border-collapse: collapse; border: 2px solid #ddd }
+		td { border: 2px solid #ddd; vertical-align: baseline; white-space: pre }
+		#arm, #thumb { height: 565px; width: 50%; min-width: 300px }
+    a#thumb { display: none }
+		#arm div, #thumb div { height: 565px; overflow: auto; padding: 0 10px }
+		#registers { max-width: 100px; padding: 0 10px }
+		#flags { max-width: 100px }
+    #flags div { padding: 2px 10px }
+		#screen { min-width: 490px; height: 330px; background: #000; position: relative; color: #fff; text-align: center; vertical-align: middle }
+		canvas { border: 1px solid red; position: absolute; top: 83px; right: 123px; -moz-transform: scale(2); -webkit-transform: scale(2); transform: scale(2) }
+	  #ram div { height: 235px; overflow: auto; padding: 0 10px }
+		#rom, button { width: 120px; margin: 5px 5px 0 0 }
+		#stopaddress { width: 70px; margin: 3px 0 }
+    b, button { font-family: arial }
+    select, button { margin: 2px 0 0; padding: 0; height: 20px }
+	</style>
+</head>
+<body>
+  <table>
+		<tr>
+			<td rowspan=2 id=arm><b>ROM (ARM)</b>
+<div id=arminner></div></td>
+			<td rowspan=2 id=thumb><b>ROM (THUMB)</b>
+<div id=thumbinner></div></td>
+			<td colspan=3 id=screen>
+<h1>GBA.js</h1>
+				<canvas id=canvas0 width=240 height=160></canvas>
+				<canvas id=canvas1 width=240 height=160></canvas>
+				<canvas id=canvas2 width=240 height=160></canvas>
+				<canvas id=canvas3 width=240 height=160></canvas>
+			</td>
+		</tr>
+		<tr>
+			<td id=registers>r0    <span id=r0>00000000</span>
+r1    <span id=r1>00000000</span>
+r2    <span id=r2>00000000</span>
+r3    <span id=r3>00000000</span>
+r4    <span id=r4>00000000</span>
+r5    <span id=r5>00000000</span>
+r6    <span id=r6>00000000</span>
+r7    <span id=r7>00000000</span>
+r8    <span id=r8>00000000</span>
+r9    <span id=r9>00000000</span>
+r10   <span id=r10>00000000</span>
+r11   <span id=r11>00000000</span>
+r12   <span id=r12>00000000</span>
+r13   <span id=r13>03007F00</span>
+r14   <span id=r14>00000000</span>
+r15   <span id=r15>08000000</span>
+cpsr  <span id=cpsr>0000001F</span>
+spsr  <span id=spsr>00000000</span>
+void  <span id=void>00000000</span></td>
+			<td id=flags><b>Flags</b>
+<div><input type=checkbox id=flagz> z  <input type=checkbox id=flagi> i
+<input type=checkbox id=flagn> n  <input type=checkbox id=flagf> f
+<input type=checkbox id=flagc> c  <input type=checkbox id=flagt> t
+<input type=checkbox id=flagv> v  <input type=checkbox id=flagq> q</div>
+<b>ROM controls</b>
+<div><select id=rom>
+  <option>Choose a ROM...</option>
+  <option value="roms/Tonc/first.gba" selected>first</option>
+  <option value="roms/tonc/m3_demo.gba">mode 3</option>
+  <option value="roms/tonc/pageflip.gba">page flip</option>
+</select>
+<button onclick="load($('rom').value);$('rom').disabled='disabled';this.disabled='disabled';$('convert').disabled='';$('trace').disabled='';$('play').disabled='';">Load</button>
+<button id=convert disabled onclick="convert_all();this.disabled='disabled'" title="optional">Convert</button>
+<button id=trace disabled>Trace</button>
+<button id=play disabled>Play</button>
+Stop @ <input id=stopaddress value=08000000></div></td>
+			<td id=ram><b>RAM</b>
+<div id=raminner></div></td>
+		</tr>
+	</table>
+  <script>debug = true</script>
+  <script src=shortcuts.js></script>
+  <script src=cpu.js></script>
+  <script src=memory.js></script>
+  <script src=screen.js></script>
+  <script src=load.js></script>
+  <script src=convert.js></script>
+  <script src=trace.js></script>
+  <script src=play.js></script>
+  <script src=opcodes.js></script>
+  <script>
+    // Show ARM code debugger
+    html = "";
+    for(i = 0x8000000; i <= 0x8001000; i += 4){
+      if((i > 0x8000000 && i < 0x80000C0) || (i > 0x80000C0 && i < 0x80000E0)){
+        continue;
+      }
+      html += "<span id=armaddress" + hex(i) + ">" + hex(i) + "</span>  <span id=armvalue" + hex(i) + ">00000000</span>  <span id=armname" + hex(i) + ">?</span>\n";
+      if(i == 0x8000000 || i == 0x80000C0){
+        html += "*** ROM header ***\n";
+      }
+    }
+    $("arminner").innerHTML = html;
+    
+    // Show THUMB code debugger
+    html = "";
+    for(i = 0x8000000; i <= 0x8001000; i += 2){
+      if(i == 0x8000000){
+        html += "*** ROM header ***\n";
+      }
+      if(i < 0x80000E0){
+        continue;
+      }
+      html += "<span id=thumbaddress" + hex(i) + ">" + hex(i) + "</span>  <span id=thumbvalue" + hex(i) + ">0000</span>  <span id=thumbname" + hex(i) + ">?</span>\n";
+    }
+    $("thumbinner").innerHTML = html;
+    
+    // Show IWRAM debugger
+    html = "";
+    for(i = 0x3008000; i >= 0x3000000; i -= 4){
+      html += hex(i) + "  <span id=memory" + hex(i) + ">00000000</span>\n";
+    }
+    $("raminner").innerHTML = html;
+  </script>
+</body>
+</html>
