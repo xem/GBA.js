@@ -7,9 +7,9 @@
 		* { margin: 0; padding: 0; -moz-box-sizing: border-box; box-sizing: border-box; font: normal 12px/13px monospace }
 		table { width: 100%; max-height: 565px }
 		html, body { overflow: hidden }
-		b { font-weight: bold; padding: 0 10px }
+		b { font-weight: bold; padding: 2px 10px; display: inline-block }
 		h1 { font-size: 36px }
-		table { border-collapse: collapse; border: 2px solid #ddd }
+		table { border-collapse: collapse; }
 		td { border: 2px solid #ddd; vertical-align: baseline; white-space: pre }
 		#arm, #thumb { height: 565px; width: 50%; min-width: 300px }
     a#thumb { display: none }
@@ -20,10 +20,12 @@
 		#screen { min-width: 490px; height: 330px; background: #000; position: relative; color: #fff; text-align: center; vertical-align: middle }
 		canvas { border: 1px solid red; position: absolute; top: 83px; right: 123px; -moz-transform: scale(2); -webkit-transform: scale(2); transform: scale(2) }
 	  #ram div { height: 235px; overflow: auto; padding: 0 10px }
-		#rom, button { width: 120px; margin: 5px 5px 0 0 }
+		#rom { width: 120px; margin: 0 5px 0 0 }
+		button { width: 120px; margin: 5px 5px 0 0 }
 		#stopaddress { width: 70px; margin: 3px 0 }
     b, button { font-family: arial }
-    select, button { margin: 2px 0 0; padding: 0; height: 20px }
+    select, button { margin: 2px 0 0; padding: 0; height: 19px }
+    .highlight { background: #cde; display: inline-block; width: 100% }
 	</style>
 </head>
 <body>
@@ -65,66 +67,63 @@ void  <span id=void>00000000</span></td>
 <div><input type=checkbox id=flagz> z  <input type=checkbox id=flagi> i
 <input type=checkbox id=flagn> n  <input type=checkbox id=flagf> f
 <input type=checkbox id=flagc> c  <input type=checkbox id=flagt> t
-<input type=checkbox id=flagv> v  <input type=checkbox id=flagq> q</div>
-<b>ROM controls</b>
+<input type=checkbox id=flagv> v  <input type=checkbox id=flagq> q</div><b>ROM controls</b>
 <div><select id=rom>
   <option>Choose a ROM...</option>
   <option value="roms/Tonc/first.gba" selected>first</option>
   <option value="roms/tonc/m3_demo.gba">mode 3</option>
   <option value="roms/tonc/pageflip.gba">page flip</option>
 </select>
-<button onclick="load($('rom').value);$('rom').disabled='disabled';this.disabled='disabled';$('convert').disabled='';$('trace').disabled='';$('play').disabled='';">Load</button>
+<button onclick="load(document.getElementById('rom').value);document.getElementById('rom').disabled='disabled';this.disabled='disabled';document.getElementById('convert').disabled='';document.getElementById('trace').disabled='';document.getElementById('play').disabled='';">Load</button>
 <button id=convert disabled onclick="convert_all();this.disabled='disabled'" title="optional">Convert</button>
-<button id=trace disabled>Trace</button>
 <button id=play disabled>Play</button>
-Stop @ <input id=stopaddress value=08000000></div></td>
+Stop @ <input id=stopaddress value=08000000>
+<button id=trace disabled>Trace</button>
+<button id=trace disabled>End current loop</button></div></td>
 			<td id=ram><b>RAM</b>
 <div id=raminner></div></td>
 		</tr>
 	</table>
-  <script>debug = true</script>
-  <script src=shortcuts.js></script>
-  <script src=cpu.js></script>
-  <script src=memory.js></script>
-  <script src=screen.js></script>
-  <script src=load.js></script>
-  <script src=convert.js></script>
-  <script src=trace.js></script>
-  <script src=play.js></script>
-  <script src=opcodes.js></script>
+  <script src="build/gba.min.js"></script>
   <script>
+    // Enable debug mode
+    debug = true;
+    
     // Show ARM code debugger
     html = "";
     for(i = 0x8000000; i <= 0x8001000; i += 4){
       if((i > 0x8000000 && i < 0x80000C0) || (i > 0x80000C0 && i < 0x80000E0)){
         continue;
       }
-      html += "<span id=armaddress" + hex(i) + ">" + hex(i) + "</span>  <span id=armvalue" + hex(i) + ">00000000</span>  <span id=armname" + hex(i) + ">?</span>\n";
+      html += "<span id=arm" + hex(i) + "><span id=armaddress" + hex(i) + ">" + hex(i) + "</span>  <span id=armvalue" + hex(i) + ">????????</span>  <span id=armname" + hex(i) + ">?</span></span>\n";
       if(i == 0x8000000 || i == 0x80000C0){
-        html += "*** ROM header ***\n";
+        html += "...\n";
       }
     }
-    $("arminner").innerHTML = html;
+    document.getElementById("arminner").innerHTML = html;
     
     // Show THUMB code debugger
     html = "";
     for(i = 0x8000000; i <= 0x8001000; i += 2){
       if(i == 0x8000000){
-        html += "*** ROM header ***\n";
+        html += "...\n";
       }
       if(i < 0x80000E0){
         continue;
       }
-      html += "<span id=thumbaddress" + hex(i) + ">" + hex(i) + "</span>  <span id=thumbvalue" + hex(i) + ">0000</span>  <span id=thumbname" + hex(i) + ">?</span>\n";
+      html += "<span id=thumb" + hex(i) + "><span id=thumbaddress" + hex(i) + ">" + hex(i) + "</span>  <span id=thumbvalue" + hex(i) + ">????</span>  <span id=thumbname" + hex(i) + ">?</span></span>\n";
     }
-    $("thumbinner").innerHTML = html;
+    document.getElementById("thumbinner").innerHTML = html;
     
     // Show IWRAM debugger
     html = "";
     for(i = 0x3008000; i >= 0x3000000; i -= 4){
       html += hex(i) + "  <span id=memory" + hex(i) + ">00000000</span>\n";
     }
-    $("raminner").innerHTML = html;
+    document.getElementById("raminner").innerHTML = html;
+    
+    // Highlight first instruction
+    document.getElementById("arm8000000").className = "highlight";
   </script>
 </body>
 </html>

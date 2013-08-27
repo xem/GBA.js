@@ -1,10 +1,17 @@
  GBA.js ~ A HTML5 GBA emulator
 ===============================
 
-Demo
-====
+Try it!
+=======
+
+Emulator:
 
 http://xem.github.com/GBA.js
+
+
+Debugger:
+
+http://xem.github.com/GBA.js/debug.html
 <br>
 <br>
 
@@ -19,6 +26,8 @@ The ROMs come from:
 * <a href="http://devkitpro.org/">DevKitPro</a> (demos)
 * <a href="http://filetrip.net/">FileTrip</a> (games)
 * <a href="http://gbaemu.dcemu.co.uk/">GBAnews</a> (games)
+
+<br>
 
 The valuable information comes from:
 

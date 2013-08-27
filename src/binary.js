@@ -1,34 +1,4 @@
-/** Shortcut functions **/
-
-/*
- * debug mode
- * if the debug var is not defined, set it to false.
- */
- if(typeof debug === "undefined"){
-  debug = false;
- }
-
-/* 
- * $()
- * Select an element.
- * @param i: the element's id.
- */
-function $(i){
-  return document.getElementById(i);
-}
-
-/*
- * hex()
- * Write a number in hexadecimal.
- * @param n: the number.
- * @param i: the length of the hexadecimal value (default: auto).
- */
-function hex(n,i){
-  if(i){
-    return ("0000000" + n.toString(16).toUpperCase()).slice(-i);
-  }
-  return n.toString(16).toUpperCase();
-}
+/** binary **/
 
 /*
  * lshift()
@@ -62,5 +32,15 @@ function bit(number, start, end){
  */
 function ror(number, length, bits){
   return lshift((number & Math.pow(2, bits) - 1), length - bits) + rshift(number, bits);
+}
+
+/*
+ * hex()
+ * Write a number in hexadecimal.
+ * @param n: the number.
+ * @param i (optional): the length of the hexadecimal value, with leading zeros.
+ */
+function hex(n,i){
+    return ((i ? "0000000" : "") + n.toString(16).toUpperCase()).slice(-i);
 }
 

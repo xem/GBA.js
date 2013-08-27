@@ -1,22 +1,6 @@
 /** ROM conversion **/
 
 /*
- * The ROM is interpreted as:
- * ARM instructions (32-bit).
- * THUMB instructions (16-bit).
- * These arrays contain each opcode's function, params and assembler code.
- * ARM opcodes are conditional, their conditions are stored in a fourth array.
- */
-arm_opcode = [];
-arm_params = [];
-arm_asm = [];
-arm_cond = [];
-
-thumb_opcode = [];
-thumb_params = [];
-thumb_asm = [];
-
-/*
  * convert_all()
  * For debug purpose only, optional.
  * Try to convert all the ROM in ARM and THUMB instructions.
@@ -38,14 +22,18 @@ function convert_all(){
 }
 
 /*
- * convert_ARM(a,t)
+ * convert_ARM(i)
  * Convert a 32-bit instruction to ARM and Assembler code.
  * @param i: the instruction to convert (as an index of m32).
  */
 function convert_ARM(i){
 
   // Vars
-  var cond, condname, opcode, mask, op2;
+  var address, pc, instr, cond, condname, opcode, rn, nn, rd, l, mask, f, c, op2, name;
+  
+  // Value of address and PC at runtime
+  address = 0x8000000 + i * 4;
+  pc = address + 8;
 
   // Default ASM value: unknown.
   arm_asm[i] = "?";
@@ -55,90 +43,85 @@ function convert_ARM(i){
 
   // Read the instruction's condition.
   cond = arm_cond[i] = bit(instr, 28, 31);
-  condname = "";
-  if(cond === 0) condname = "EQ";
-  if(cond === 1) condname = "NE";
-  if(cond === 2) condname = "CS";
-  if(cond === 3) condname = "CC";
-  if(cond === 4) condname = "MI";
-  if(cond === 5) condname = "PL";
-  if(cond === 6) condname = "VS";
-  if(cond === 7) condname = "VC";
-  if(cond === 8) condname = "HI";
-  if(cond === 9) condname = "LS";
-  if(cond === 0xA) condname = "GE";
-  if(cond === 0xB) condname = "LT";
-  if(cond === 0xC) condname = "GT";
-  if(cond === 0xD) condname = "LE";
-  if(cond === 0xF) condname = "NV";
+  condname = condnames[cond];
 
   // ARM3 opcodes
   if(bit(instr, 8, 27) === 0x012FFF){
 
-    // BX Rn
-    arm_opcode[i] = arm_bx;
-    arm_params[i] = [bit(instr, 0, 3)];
-    arm_asm[i] = "BX" + condname + " r" + arm_params[i][0];
+    // Read opcode
+    opcode = bit(instr, 4, 7);
+    
+    // BX Rn (if opcode = 1)
+    if(opcode === 1){
+      arm_opcode[i] = arm_bx;
+      arm_params[i] = [bit(instr, 0, 3)];
+      arm_asm[i] = "BX" + condname + " r" + arm_params[i][0];
+    }
+    
+    // BLX Rn (if opcode = 3)
+    else if(opcode === 3){
+      // todo
+    }
   }
 
   // ARM4 opcodes
   else if(bit(instr, 25, 27) === 0x5){
     opcode = bit(instr, 24);
-    arm_params[i] = [0x8000000 + i * 4 + 8 + bit(instr, 0, 23) * 4];
+    
+    // Common param
+    arm_params[i] = [pc + bit(instr, 0, 23) * 4];
 
-    // BL address (if opcode = 1)
-    if(opcode){
+    // BL label (if opcode = 1)
+    if(opcode === 1){
       arm_opcode[i] = arm_bl;
       arm_asm[i] = "BL";
     }
 
-    // B address (if opcode = 0)
+    // B label (if opcode = 0)
     else{
       arm_opcode[i] = arm_b;
       arm_asm[i] = "B";
     }
 
+    // Common assembler code
     arm_asm[i] += condname + " 0x" + hex(arm_params[i][0]);
 
-    if(arm_params[i][0] < 0x8000000 + i * 4){
+    if(arm_params[i][0] < address){
       arm_asm[i] += " ;&uarr;"
     }
-    if(arm_params[i][0] > 0x8000000 + i * 4){
+    else if(arm_params[i][0] > address){
       arm_asm[i] += " ;&darr;"
     }
-    if(arm_params[i][0] === 0x8000000 + i * 4){
+    else if(arm_params[i][0] === address){
       arm_asm[i] += " ;&larr;"
     }
   }
 
   // ARM9 opcodes
-  // Bit fields:
-  // i: bit(instr, 25),
-  // p: bit(instr, 24),
-  // u: bit(instr, 23),
-  // b: bit(instr, 22),
-  // rn: bit(instr, 16, 19),
-  // rd: bit(instr, 12, 15),
-  // wt: bit(instr, 21),
-  // is: bit(instr, 7, 11),
-  // st: bit(instr, 5, 6),
-  // rm: bit(instr, 0, 3),
-  // nn: bit(instr, 0, 11)
   else if(bit(instr, 26, 27) === 0x1){
 
+    // Bit fields:
+    // i: bit(instr, 25),
+    // p: bit(instr, 24),
+    // u: bit(instr, 23),
+    // b: bit(instr, 22),
+    l = bit(instr, 20);
+    rn = bit(instr, 16, 19);
+    rd = bit(instr, 12, 15);
+    // wt: bit(instr, 21),
+    // is: bit(instr, 7, 11),
+    // st: bit(instr, 5, 6),
+    // rm: bit(instr, 0, 3),
+    nn = bit(instr, 0, 11);
+    
     // LDR / STR Rd, Imm (if Rn = PC)
-    if(bit(instr, 16, 19) === 15){
+    if(rn === 15){
 
       // Params
-      /*if(i*4 === 0xf0){
-        console.log(hex(i*4));
-        console.log(hex(0x8000000 + i * 4 + 8 + bit(instr, 0, 11)));
-      }*/
-
-      arm_params[i] = [bit(instr, 12, 15), mem(0x8000000 + i * 4 + 8 + bit(instr, 0, 11),4)];
+      arm_params[i] = [rd, mem(pc + nn, 4)];
 
       // LDR Rd, Imm (if L = 1)
-      if(bit(instr, 20)){
+      if(l === 1){
         arm_opcode[i] = arm_ldr_ri;
         arm_asm[i] = "LDR";
       }
@@ -150,17 +133,17 @@ function convert_ARM(i){
       }
 
       // Assembler
-      arm_asm[i] += condname + " r" + arm_params[i][0] + ",=#0x" + hex(arm_params[i][1].toString(16));
+      arm_asm[i] += condname + " r" + arm_params[i][0] + ",=#0x" + hex(arm_params[i][1]);
     }
 
     // LDR / STR Rd, Rn, nn (if Rn != PC)
     else{
 
       // Params
-      arm_params[i] = [bit(instr, 12, 15), bit(instr, 16, 19), bit(instr, 0, 11)];
+      arm_params[i] = [rd, rn, nn];
 
       // LDR Rd, [Rn, nn] (if L = 1)
-      if(bit(instr, 20)){
+      if(l === 1){
         arm_opcode[i] = arm_ldr_rrn;
         arm_asm[i] = "LDR";
       }
@@ -184,47 +167,48 @@ function convert_ARM(i){
   }
 
   // ARM5/6 opcodes
-  // Bit fields:
-  // opcode5: bit(instr, 21, 24),
-  // opcode6: bit(instr, 21),
-  // i: bit(instr, 25),
-  // s: bit(instr, 20),
-  // rn: bit(instr, 16, 19),
-  // rd: bit(instr, 12, 15),
-  // is: bit(instr, 8, 11) * 2,
-  // nn: bit(instr, 0, 7),
-  // r: bit(instr, 4),
-  // rs: bit(instr, 8, 11),
-  // is: bit(instr, 7, 11),
-  // st: bit(instr, 5, 6),
-  // rm: bit(instr, 0, 3),
-  // psr: bit(instr, 22),
-  // f: bit(instr, 19),
-  // s: bit(instr, 18),
-  // x: bit(instr, 17),
-  // c: bit(instr, 16),
-  // imms: bit(instr, 8, 11),
-  // imm: bit(instr, 0, 7).
   else{
 
+    // Bit fields:
+    opcode = bit(instr, 21, 24);
+    // opcode6: bit(instr, 21),
+    // i: bit(instr, 25),
+    // s: bit(instr, 20),
+    rn = bit(instr, 16, 19);
+    rd = bit(instr, 12, 15);
+    // is: bit(instr, 8, 11) * 2,
+    // nn: bit(instr, 0, 7),
+    // r: bit(instr, 4),
+    // rs: bit(instr, 8, 11),
+    // is: bit(instr, 7, 11),
+    // st: bit(instr, 5, 6),
+    // rm: bit(instr, 0, 3),
+    // psr: bit(instr, 22),
+    f = bit(instr, 19);
+    // s: bit(instr, 18),
+    // x: bit(instr, 17),
+    c = bit(instr, 16);
+    // imms: bit(instr, 8, 11),
+    // imm: bit(instr, 0, 7).
+    
     // Reset mask
     mask = 0;
 
     // ARM6 opcodes
-    if(!bit(instr, 18) && bit(instr, 21, 24) >= 8 && bit(instr, 21, 24) <= 0xB){
+    if(!bit(instr, 18) && opcode >= 8 && opcode <= 0xB){
 
       // allow to write on flags (bits 24-31) (if f = 1)
-      if(bit(instr, 19) === 1){
+      if(f === 1){
         mask += 0xFF000000;
       }
 
       // allow to write on controls (bits 0-7) (if c = 1)
-      if(bit(instr, 16) === 1){
+      if(c === 1){
         mask += 0xFF;
       }
 
       // MSR params
-      arm_params[i] = [bit(instr, 0, 3), bit(instr, 19), bit(instr, 16), mask];
+      arm_params[i] = [bit(instr, 0, 3), f, c, mask];
 
       // MSR spsr{f}{c}, op (if psr = 1)
       if(bit(instr, 22)){
@@ -270,16 +254,16 @@ function convert_ARM(i){
         case 0x4:
 
           // ADD rd, Imm (if Rn = PC)
-          if(bit(instr, 16, 19) === 15){
+          if(rn === 15){
             arm_opcode[i] = arm_add_ri;
-            arm_params[i] = [bit(instr, 12, 15), 0x8000000 + i * 4 + 8 + op2];
+            arm_params[i] = [rd, pc + op2];
             arm_asm[i] = "ADD r" + arm_params[i][0] + ",=#0x" + hex(arm_params[i][1]);
           }
 
           // ADD Rd, Rn, Op2 (if Rn != PC)
           else{
             arm_opcode[i] = arm_add_rrn;
-            arm_params[i] = [bit(instr, 12, 15), bit(instr, 16, 19), op2];
+            arm_params[i] = [rd, rn, op2];
             arm_asm[i] = "ADD r" + arm_params[i][0] + ",r" + arm_params[i][1] + ",0x" + hex(arm_params[i][2]);
           }
           break;
@@ -310,9 +294,9 @@ function convert_ARM(i){
 
         // MOV Rd, Op2
         case 0xD:
-          arm_opcode[i] = arm_mov;
-          arm_params[i] = [bit(instr, 12, 15), op2];
-          arm_asm[i] = "MOV r" + arm_params[i][0] + ",0x" + hex(arm_params[i][1]);
+          arm_opcode[i] = arm_mov_ri;
+          arm_params[i] = [rd, op2];
+          arm_asm[i] = "MOV r" + arm_params[i][0] + ",#0x" + hex(arm_params[i][1]);
           break;
 
         case 0xE:
@@ -324,14 +308,18 @@ function convert_ARM(i){
     }
   }
 
-  if(debug && $("armvalue" + hex(0x8000000 + i * 4))){
-    $("armvalue" + hex(0x8000000 + i * 4)).innerHTML = hex(m32[8][i], 8);
-    $("armname" + hex(0x8000000 + i * 4)).innerHTML = arm_asm[i];
+  // Update debug interface
+  if(debug){
+    name = document.getElementById("armvalue" + hex(address));
+    if(name){
+      name.innerHTML = hex(m32[8][i], 8);
+      document.getElementById("armname" + hex(address)).innerHTML = arm_asm[i];
+    }
   }
 }
 
 /*
- * convert_THUMB(a,t)
+ * convert_THUMB(i)
  * Convert a 16-bit instruction to THUMB and Assembler code.
  * @param i: the instruction to convert (as an index of m16).
  */
