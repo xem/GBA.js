@@ -44,6 +44,12 @@ cpsr = 0;
 spsr = 0;
 
 /*
+ * thumb
+ * THUMB mode, off by default
+ */
+thumb = 0;
+
+/*
  * m
  * The GBA's memory contains 8 useful parts.
  * Each part is an ArrayBuffer representing an address range:

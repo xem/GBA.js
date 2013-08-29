@@ -30,6 +30,9 @@ function load(p){
         m32[i] = new Uint32Array(m[i]);
       }
     }
+    
+    // Convert and highlight first ARM instruction
+    convert_ARM(0);
   }
 }
 

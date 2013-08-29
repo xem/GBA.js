@@ -56,29 +56,33 @@ function minify($buffer){
   $buffer = str_replace('"a"', '"canvas"', $buffer);
   $buffer = str_replace("imagedata", "b", $buffer);
   $buffer = str_replace("cpsr", "c", $buffer);
+  $buffer = str_replace("c_", "cpsr_", $buffer);
   $buffer = str_replace("spsr", "d", $buffer);
-  $buffer = str_replace("arm_opcode", "e", $buffer);
-  $buffer = str_replace("arm_params", "f1", $buffer);
-  $buffer = str_replace("arm_asm", "g", $buffer);
-  $buffer = str_replace("arm_cond", "h", $buffer);
-  $buffer = str_replace("thumb_opcode", "i", $buffer);
-  $buffer = str_replace("thumb_params", "j", $buffer);
-  $buffer = str_replace("thumb_asm", "k", $buffer);
-  $buffer = str_replace("condnames", "n", $buffer);
+  $buffer = str_replace("s_", "spsr_", $buffer);
+  $buffer = str_replace("thumb", "e", $buffer);
+  $buffer = str_replace('"e"', '"thumb"', $buffer);
+  $buffer = str_replace("arm_opcode", "g", $buffer);
+  $buffer = str_replace("arm_params", "h", $buffer);
+  $buffer = str_replace("arm_asm", "j", $buffer);
+  $buffer = str_replace("arm_cond", "k", $buffer);
+  $buffer = str_replace("thumb_opcode", "l", $buffer);
+  $buffer = str_replace("thumb_params", "n", $buffer);
+  $buffer = str_replace("thumb_asm", "o", $buffer);
+  $buffer = str_replace("condnames", "p", $buffer);
 
-  $buffer = str_replace("mem", "o", $buffer);
+  $buffer = str_replace("mem", "q", $buffer);
 
-  $buffer = str_replace("convert_ARM", "p", $buffer);
-  $buffer = str_replace("convert_THUMB", "q", $buffer);
+  $buffer = str_replace("convert_ARM", "E", $buffer);
+  $buffer = str_replace("convert_THUMB", "F", $buffer);
   
-  $buffer = str_replace("lshift", "s", $buffer);
-  $buffer = str_replace("rshift", "t", $buffer);
-  $buffer = str_replace("bit", "u", $buffer);
-  $buffer = str_replace("ror", "v", $buffer);
-  $buffer = str_replace("hex", "x", $buffer);
-  $buffer = str_replace("function x", "function hex", $buffer);
+  $buffer = str_replace("lshift", "G", $buffer);
+  $buffer = str_replace("rshift", "H", $buffer);
+  $buffer = str_replace("bit", "I", $buffer);
+  $buffer = str_replace("hex", "J", $buffer);
+  $buffer = str_replace("function J", "function hex", $buffer);
+  $buffer = str_replace("ror", "K", $buffer);
 
-  // echo "<title> Before: " . strlen($tmp) . ", now: " . strlen($buffer) . "</title>";
+  //echo "<title> Before: " . strlen($tmp) . ", now: " . strlen($buffer) . "</title>";
   return $buffer;
 }
 ob_start();

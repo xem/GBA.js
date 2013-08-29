@@ -7,33 +7,38 @@
  * Invalid results when it's used on data or on the wrong instruction set. 
  */
 function convert_all(){
+
   // Vars
   var i;
   
   // ARM
   for(i = 0; i < m32[8].length; i++){
+    r[15] = 0x8000000 + i * 4;
     convert_ARM(i);
   }
   
   // THUMB
   for(i = 0; i < m16[8].length; i++){
+    r[15] = 0x8000000 + i * 4;
     convert_THUMB(i);
   }
+  
+  // Reset PC
+  r[15] = 0x8000000;
 }
 
 /*
- * convert_ARM(i)
+ * convert_ARM()
  * Convert a 32-bit instruction to ARM and Assembler code.
  * @param i: the instruction to convert (as an index of m32).
  */
 function convert_ARM(i){
 
   // Vars
-  var address, pc, instr, cond, condname, opcode, rn, nn, rd, l, mask, f, c, op2, name;
+  var pc, instr, cond, condname, opcode, rn, nn, rd, l, psr, mask, f, c, op2, name;
   
-  // Value of address and PC at runtime
-  address = 0x8000000 + i * 4;
-  pc = address + 8;
+  // Value of PC during execution.
+  pc = r[15] + 8;
 
   // Default ASM value: unknown.
   arm_asm[i] = "?";
@@ -64,35 +69,23 @@ function convert_ARM(i){
     }
   }
 
-  // ARM4 opcodes
+  // ARM4 opcodes (B, BL)
   else if(bit(instr, 25, 27) === 0x5){
+  
     opcode = bit(instr, 24);
-    
-    // Common param
     arm_params[i] = [pc + bit(instr, 0, 23) * 4];
-
-    // BL label (if opcode = 1)
-    if(opcode === 1){
-      arm_opcode[i] = arm_bl;
-      arm_asm[i] = "BL";
-    }
-
-    // B label (if opcode = 0)
-    else{
-      arm_opcode[i] = arm_b;
-      arm_asm[i] = "B";
-    }
-
-    // Common assembler code
+    arm_opcode[i] = (opcode ? arm_bl : arm_b);
+    arm_asm[i] = (opcode ? "BL" : "B");
     arm_asm[i] += condname + " 0x" + hex(arm_params[i][0]);
 
-    if(arm_params[i][0] < address){
+    // Assembler comment
+    if(arm_params[i][0] < r[15]){
       arm_asm[i] += " ;&uarr;"
     }
-    else if(arm_params[i][0] > address){
+    else if(arm_params[i][0] > r[15]){
       arm_asm[i] += " ;&darr;"
     }
-    else if(arm_params[i][0] === address){
+    else if(arm_params[i][0] === r[15]){
       arm_asm[i] += " ;&larr;"
     }
   }
@@ -113,54 +106,28 @@ function convert_ARM(i){
     // st: bit(instr, 5, 6),
     // rm: bit(instr, 0, 3),
     nn = bit(instr, 0, 11);
-    
-    // LDR / STR Rd, Imm (if Rn = PC)
-    if(rn === 15){
 
-      // Params
-      arm_params[i] = [rd, mem(pc + nn, 4)];
+    // Params
+    arm_params[i] = (rn === 15 ? [rd, mem(pc + nn, 4)] : [rd, rn, nn]);
 
-      // LDR Rd, Imm (if L = 1)
-      if(l === 1){
-        arm_opcode[i] = arm_ldr_ri;
-        arm_asm[i] = "LDR";
-      }
-
-      // STR Rd, Imm (if L = 0)
-      else{
-        arm_opcode[i] = arm_str_ri;
-        arm_asm[i] = "STR";
-      }
-
-      // Assembler
-      arm_asm[i] += condname + " r" + arm_params[i][0] + ",=#0x" + hex(arm_params[i][1]);
+    // LDR
+    if(l){
+      arm_opcode[i] = (rn === 15 ? arm_ldr_ri: arm_ldr_rrn);
+      arm_asm[i] = "LDR";
     }
 
-    // LDR / STR Rd, Rn, nn (if Rn != PC)
+    // STR
     else{
-
-      // Params
-      arm_params[i] = [rd, rn, nn];
-
-      // LDR Rd, [Rn, nn] (if L = 1)
-      if(l === 1){
-        arm_opcode[i] = arm_ldr_rrn;
-        arm_asm[i] = "LDR";
-      }
-
-      // STR Rd, [Rn, nn] (if L = 0)
-      else{
-        arm_opcode[i] = arm_str_rrn;
-        arm_asm[i] = "STR";
-      }
-
-      // Assembler
-      arm_asm[i] += condname + " r" + arm_params[i][0] + ",[r" + arm_params[i][1] + ",0x" + hex(arm_params[i][2]) + "]";
+      arm_opcode[i] = (rn === 15 ? arm_str_ri: arm_str_rrn);
+      arm_asm[i] = "STR";
     }
-  }
 
+    // Assembler
+    arm_asm[i] += condname + " r" + arm_params[i][0] + (rn === 15 ? ",=#0x" + hex(arm_params[i][1]) : ",[r" + arm_params[i][1] + ",0x" + hex(arm_params[i][2]) + "]");
+  }
+  
   // ARM7 opcodes
-  else if(bit(instr, 25, 27) === 0x0 && bit(instr, 7) === 0x0 && bit(instr, 12, 15) != 0xF){
+  else if(!bit(instr, 25, 27) && !bit(instr, 7) && bit(instr, 12, 15) != 0xF){
     arm_opcode[i] = null;
     arm_params[i] = [];
     arm_asm[i] = "ARM7";
@@ -190,6 +157,7 @@ function convert_ARM(i){
     c = bit(instr, 16);
     // imms: bit(instr, 8, 11),
     // imm: bit(instr, 0, 7).
+    psr = bit(instr, 22);
     
     // Reset mask
     mask = 0;
@@ -197,29 +165,26 @@ function convert_ARM(i){
     // ARM6 opcodes
     if(!bit(instr, 18) && opcode >= 8 && opcode <= 0xB){
 
-      // allow to write on flags (bits 24-31) (if f = 1)
-      if(f === 1){
-        mask += 0xFF000000;
-      }
+      // Read opcode
+      opcode = bit(instr, 21);
+      
+      // MSR (if opcode = 1)
+      if(opcode){
+      
+        // allow to write on flags (bits 24-31) (if f = 1)
+        if(f){
+          mask += 0xFF000000;
+        }
 
-      // allow to write on controls (bits 0-7) (if c = 1)
-      if(c === 1){
-        mask += 0xFF;
-      }
+        // allow to write on controls (bits 0-7) (if c = 1)
+        if(c){
+          mask += 0xFF;
+        }
 
-      // MSR params
-      arm_params[i] = [bit(instr, 0, 3), f, c, mask];
-
-      // MSR spsr{f}{c}, op (if psr = 1)
-      if(bit(instr, 22)){
-        arm_opcode[i] = arm_msr_spsr;
-        arm_asm[i] = "MSR" + condname + " spsr_" + (arm_params[i][1] ? "f" : "") + (arm_params[i][2] ? "c" : "") + ",r" + arm_params[i][0];
-      }
-
-      // MSR cpsr{f}{c}, op (if psr = 0)
-      else{
-        arm_opcode[i] = arm_msr_cpsr;
-        arm_asm[i] = "MSR" + condname + " cpsr_" + (arm_params[i][1] ? "f" : "") + (arm_params[i][2] ? "c" : "") + ",r" + arm_params[i][0];
+        // MSR
+        arm_params[i] = [bit(instr, 0, 3), mask];
+        arm_opcode[i] = (psr ? arm_msr_spsr : arm_msr_cpsr);
+        arm_asm[i] = "MSR" + condname + (psr ? " spsr_ " : " cpsr_") + (f ? "f" : "") + (c ? "c" : "") + ",r" + arm_params[i][0];
       }
     }
 
@@ -310,46 +275,49 @@ function convert_ARM(i){
 
   // Update debug interface
   if(debug){
-    name = document.getElementById("armvalue" + hex(address));
+    name = document.getElementById("armvalue" + hex(r[15]));
     if(name){
       name.innerHTML = hex(m32[8][i], 8);
-      document.getElementById("armname" + hex(address)).innerHTML = arm_asm[i];
+      document.getElementById("armname" + hex(r[15])).innerHTML = arm_asm[i];
     }
   }
 }
 
 /*
- * convert_THUMB(i)
+ * convert_THUMB
  * Convert a 16-bit instruction to THUMB and Assembler code.
  * @param i: the instruction to convert (as an index of m16).
  */
-function convert_THUMB(a){
+function convert_THUMB(i){
 
-/*
-  // Extract THUMB opcodes
-  for(i = 0; i < rom16.length; i++){
-    instr = rom16[i];
-    thumb[i] = [0, [0]];
+  // Vars
+  var pc, instr, name;
+  
+  // Value of PC during execution.
+  pc = r[15] + 8;
 
-    // Header
-    if(i > 1 && i < 96){
-      continue;
-    }
+  // Default ASM value: unknown.
+  thumb_asm[i] = "?";
 
-    t = bit(instr, 8, 15);
-    u = bit(instr, 10, 15);
-    v = bit(instr, 11, 15);
-    w = bit(instr, 12, 15);
-    z = bit(instr, 13, 15);
-    rd = bit(instr, 0, 2);
-    rs = bit(instr, 3, 5);
-    rb = bit(instr, 3, 5);
-    offset6_10 = bit(instr, 6, 10);
-    offset6_8 = bit(instr, 6, 8);
-    offset0_7 = bit(instr, 0, 7);
-    name = "?";
+  // Read the instruction.
+  instr = m16[8][i];
 
-    // THUMB 1/2 instructions
+  // Bit fields
+  t = bit(instr, 8, 15);
+  u = bit(instr, 10, 15);
+  v = bit(instr, 11, 15);
+  w = bit(instr, 12, 15);
+  z = bit(instr, 13, 15);
+  rd = bit(instr, 0, 2);
+  rs = bit(instr, 3, 5);
+  rb = bit(instr, 3, 5);
+  offset6_10 = bit(instr, 6, 10);
+  offset6_8 = bit(instr, 6, 8);
+  offset0_7 = bit(instr, 0, 7);
+  name = "?";
+
+  /*
+  // THUMB 1/2 instructions
     if(z === 0x0){
       opcode = bit(instr, 11, 12);
       if(opcode === 0x3){                                 // THUMB 2:
@@ -979,5 +947,13 @@ function convert_THUMB(a){
     if(thumb[i]) thumb[i].push(name);
   }
 */
+  // Update debug interface
+  if(debug){
+    name = document.getElementById("thumbvalue" + hex(r[15]));
+    if(name){
+      name.innerHTML = hex(m16[8][i], 4);
+      document.getElementById("thumbname" + hex(r[15])).innerHTML = thumb_asm[i];
+    }
+  }
 }
 

@@ -75,16 +75,25 @@ void  <span id=void>00000000</span></td>
   <option value="roms/tonc/pageflip.gba">page flip</option>
 </select>
 <button onclick="load(document.getElementById('rom').value);document.getElementById('rom').disabled='disabled';this.disabled='disabled';document.getElementById('convert').disabled='';document.getElementById('trace').disabled='';document.getElementById('play').disabled='';">Load</button>
-<button id=convert disabled onclick="convert_all();this.disabled='disabled'" title="optional">Convert</button>
+<button id=trace disabled onclick="trace()">Trace</button>
+<button id=trace disabled>End current loop</button>
 <button id=play disabled>Play</button>
 Stop @ <input id=stopaddress value=08000000>
-<button id=trace disabled>Trace</button>
-<button id=trace disabled>End current loop</button></div></td>
+<button id=convert disabled onclick="convert_all();this.disabled='disabled'" title="optional">Convert all</button></div></td>
 			<td id=ram><b>RAM</b>
 <div id=raminner></div></td>
 		</tr>
 	</table>
-  <script src="build/gba.min.js"></script>
+  <script src="src/globals.js"></script>
+  <script src="src/cpu.js"></script>
+  <script src="src/memory.js"></script>
+  <script src="src/screen.js"></script>
+  <script src="src/load.js"></script>
+  <script src="src/convert.js"></script>
+  <script src="src/trace.js"></script>
+  <script src="src/play.js"></script>
+  <script src="src/arm.js"></script>
+  <script src="src/binary.js"></script> 
   <script>
     // Enable debug mode
     debug = true;
@@ -121,7 +130,7 @@ Stop @ <input id=stopaddress value=08000000>
       html += hex(i) + "  <span id=memory" + hex(i) + ">00000000</span>\n";
     }
     document.getElementById("raminner").innerHTML = html;
-    
+
     // Highlight first instruction
     document.getElementById("arm8000000").className = "highlight";
   </script>

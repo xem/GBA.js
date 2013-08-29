@@ -23,11 +23,11 @@ function mem(address, bytes, value, mask){
     view = m8;
   }
 
-  if(bytes === 2){
+  else if(bytes === 2){
     view = m16;
   }
 
-  if(bytes === 4){
+  else if(bytes === 4){
     view = m32;
   }
 
@@ -39,11 +39,12 @@ function mem(address, bytes, value, mask){
     address &= 0x00FFFFFF;
   }
   
+  else if(prefix > 0xE){
+    prefix = 0xE;
+  }
+  
   else{
     prefix = 8;
-    if(prefix > 0xE){
-      prefix = 0xE;
-    }
   }
   
   if(mirrors[prefix]){
