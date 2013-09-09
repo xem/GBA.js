@@ -19,10 +19,10 @@ function rshift(number, shift){
 }
 
 /*
- * bit()
+ * b()
  * Extracts some bits in the binary representation of a number.
  */
-function bit(number, start, end){
+function b(number, start, end){
   return rshift(number, start) & (Math.pow(2, (end || start) - start + 1) - 1);
 }
 
@@ -35,12 +35,12 @@ function ror(number, length, bits){
 }
 
 /*
- * hex()
+ * x()
  * Write a number in hexadecimal.
  * @param n: the number.
  * @param i (optional): the length of the hexadecimal value, with leading zeros.
  */
-function hex(n,i){
+function x(n,i){
     return ((i ? "0000000" : "") + n.toString(16).toUpperCase()).slice(-i);
 }
 

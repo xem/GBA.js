@@ -1,15 +1,18 @@
 <?php
+header("Content-Type: text/javascript; charset=utf-8");
 function minify($buffer){
   $tmp = $buffer;
-  
+
+  // JS shortcuts
   $buffer = str_replace("document.getElementById", "$", $buffer);
   $buffer = str_replace("new ArrayBuffer", "A", $buffer);
   $buffer = str_replace("new Uint8Array", "B", $buffer);
   $buffer = str_replace("new Uint16Array", "C", $buffer);
   $buffer = str_replace("new Uint32Array", "D", $buffer);
   $buffer = str_replace("Math", "M", $buffer);
-  
-  $buffer = str_replace("arm_bx", "aa", $buffer);
+
+  // ARM
+  /*$buffer = str_replace("arm_bx", "aa", $buffer);
   $buffer = str_replace("arm_blx", "ab", $buffer);
 
   $buffer = str_replace("arm_b", "ac", $buffer);
@@ -51,8 +54,10 @@ function minify($buffer){
   $buffer = str_replace("arm_str_ri", "bj", $buffer);
   $buffer = str_replace("arm_ldr_rrn", "bk", $buffer);
   $buffer = str_replace("arm_ldr_ri", "bl", $buffer);
-  
-  $buffer = str_replace("canvas", "a", $buffer);
+  */
+
+  // GBA.js globals
+  /*$buffer = str_replace("canvas", "a", $buffer);
   $buffer = str_replace('"a"', '"canvas"', $buffer);
   $buffer = str_replace("imagedata", "b", $buffer);
   $buffer = str_replace("cpsr", "c", $buffer);
@@ -74,15 +79,14 @@ function minify($buffer){
 
   $buffer = str_replace("convert_ARM", "E", $buffer);
   $buffer = str_replace("convert_THUMB", "F", $buffer);
-  
+
   $buffer = str_replace("lshift", "G", $buffer);
   $buffer = str_replace("rshift", "H", $buffer);
   $buffer = str_replace("bit", "I", $buffer);
-  $buffer = str_replace("hex", "J", $buffer);
   $buffer = str_replace("function J", "function hex", $buffer);
-  $buffer = str_replace("ror", "K", $buffer);
+  $buffer = str_replace("ror", "K", $buffer);*/
 
-  //echo "<title> Before: " . strlen($tmp) . ", now: " . strlen($buffer) . "</title>";
+  $buffer .= "// Before: " . strlen($tmp) . ", now: " . strlen($buffer);
   return $buffer;
 }
 ob_start();
@@ -95,6 +99,7 @@ include("../src/load.js");
 include("../src/convert.js");
 include("../src/trace.js");
 include("../src/play.js");
+include("../src/thumb.js");
 include("../src/arm.js");
 include("../src/binary.js");
 
@@ -119,11 +124,9 @@ function A(i){return new ArrayBuffer(i)}
 function B(i){return new Uint8Array(i)}
 function C(i){return new Uint16Array(i)}
 function D(i){return new Uint32Array(i)}
+M = Math;
 
 <?php
 echo minify($out);
 // echo $out;
 ?>
-
-x = hex;
-M = Math;

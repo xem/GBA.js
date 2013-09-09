@@ -39,31 +39,31 @@ arm_add_ri = function(p){
 
   // Rd = Rn + Op2
   r[p[0]] = p[1];
-  
+
   // Next
   r[15] += 4;
-  
+
   // Debug
   if(debug){
-    
+
     // Update Rd
-    document.getElementById("r" + p[0]).innerHTML = hex(r[p[0]], 8);
+    document.getElementById("r" + p[0]).innerHTML = x(r[p[0]], 8);
   }
 }
 
 arm_mov_ri = function(p){
-  
-  // Rd = Op2 
+
+  // Rd = Op2
   r[p[0]] = p[1];
-  
+
   // Next
   r[15] += 4;
-  
+
   // Debug
   if(debug){
-    
+
     // Update Rd
-    document.getElementById("r" + p[0]).innerHTML = hex(r[p[0]], 8);
+    document.getElementById("r" + p[0]).innerHTML = x(r[p[0]], 8);
   }
 }
 
@@ -72,15 +72,15 @@ arm_msr_cpsr = function(p){
 
   // CPSR[field] = Op (with a bit mask)
   cpsr = r[p[0]] & p[1];
-  
+
   // Next
   r[15] += 4;
-  
+
   // Debug
   if(debug){
-    
+
     // Update Rd
-    document.getElementById("cpsr").innerHTML = hex(cpsr, 8);
+    document.getElementById("cpsr").innerHTML = x(cpsr, 8);
   }
 }
 
@@ -96,7 +96,7 @@ arm_str_rrn = function(p){
 
   // [Rn +/- offset] = Rd
   mem(r[p[1]] + p[2], 4, r[p[0]]);
-  
+
   // Next
   r[15] += 4;
 }
@@ -117,12 +117,12 @@ arm_ldr_ri = function(p){
 
   // Next
   r[15] += 4;
-  
+
   // Debug
   if(debug){
-    
+
     // Update Rd
-    document.getElementById("r" + p[0]).innerHTML = hex(r[p[0]], 8);
+    document.getElementById("r" + p[0]).innerHTML = x(r[p[0]], 8);
   }
 }
 

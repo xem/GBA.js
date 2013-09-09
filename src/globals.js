@@ -5,7 +5,7 @@
  * Debug mode, disabled by default
  */
 debug = false;
- 
+
 /*
  * canvas, imagedata
  * The GBA's screen has four layers, each of them is represented by a canvas.
@@ -81,14 +81,14 @@ m = [
 ];
 
 /*
- * m8, m16 and m32 
+ * m8, m16 and m32
  * 8-bit, 16-bit and 32-bit views of the memory.
  */
 m8 = [];
 m16 = [];
 m32 = [];
 
-/* 
+/*
  * arm_opcode, arm_params, arm_asm, arm_cond, thumb_opcode, thumb_params, thumb_asm
  * The ROM is interpreted as ARM (32-bit) and THUMB (16-bit) instructions.
  * These arrays contain each opcode's function, params and assembler code.
@@ -105,7 +105,7 @@ thumb_asm = [];
 
 /*
  * condnames
- * suffix for conditional ARM instructions.
+ * suffix for conditional instructions.
  */
 condnames =
 [

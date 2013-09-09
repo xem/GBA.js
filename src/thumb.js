@@ -1,7 +1,6 @@
 /** THUMB opcodes */
 
 // THUMB 1
-/*
 thumb_lsl_rrn = function(p){
   // trace += "LSL r" + p[0] + ",r" + p[1] + ",#0x" + p[2].toString(16);
   // r[p[0]] = lshift(r[p[1]], p[2]);
@@ -312,7 +311,7 @@ thumb_push = function(p){ // optimizable
     // trace += "R14,";
   // }
   // for(var i = 7; i >= 0; i--){                            // for each register "i" (descending order)
-    // if(bit(p[0], i)){                                 // if Rlist.i (bit i of Rlist) == 1
+    // if(b(p[0], i)){                                 // if Rlist.i (bit i of Rlist) == 1
       // r[13] -= 4;                                     // decrement R13
       // mem(r[13], 4, r[i]);                    // store Ri at address R13 (SP)
       // trace += "R" + i + ",";
@@ -325,7 +324,7 @@ thumb_push = function(p){ // optimizable
 thumb_pop = function(p){ // optimizable
   // trace += "POP {";
   // for(var i = 0; i < 8; i++){                             // for each register "i" (ascending order)
-    // if(bit(p[0], i)){                                 // if Rlist.i (bit i of Rlist) == 1
+    // if(b(p[0], i)){                                 // if Rlist.i (bit i of Rlist) == 1
       // r[i] = mem(r[13], 4);                       // load Ri from address R13 (SP)
       // r[13] += 4;                                     // increment R13
       // trace += "R" + i + ",";
@@ -345,7 +344,7 @@ thumb_pop = function(p){ // optimizable
 thumb_stmia = function(p){
   // trace += "STMIA r" + p[0] + "!,{";
   // for(var i = 0; i < 8; i++){                             // i = 0..7
-    // if(bit(p[1], i) === 1){                               // if Rlist.i === 1
+    // if(b(p[1], i) === 1){                               // if Rlist.i === 1
       // trace += "R" + i + ",";
       // mem(r[p[0]], 4, r[i]);                              // store Ri at address Rb
       // r[p[0]] += 4;                                       // increment Rb by 1 word
@@ -358,7 +357,7 @@ thumb_stmia = function(p){
 thumb_ldmia = function(p){
   // trace += "LDMIA r" + p[0] + "!,{";
   // for(var i = 0; i < 8; i++){                             // i = 0..7
-    // if(bit(p[1], i) === 1){                               // if Rlist.i === 1
+    // if(b(p[1], i) === 1){                               // if Rlist.i === 1
       // trace += "R" + i + ",";
       // r[i] = mem(r[p[0]], 4);                             // load Ri from address Rb
       // r[p[0]] += 4;                                       // increment Rb by 1 word
@@ -433,7 +432,7 @@ thumb_bge = function(p){}
 
 thumb_blt = function(p){
   // trace += "BLT #0x" + p[0].toString(16);
-  // if(bit(cpsr, 31) !== bit(cpsr, 28))                     // if CPSR.N != CPSR.V:
+  // if(b(cpsr, 31) !== b(cpsr, 28))                     // if CPSR.N != CPSR.V:
   // {
     // if(p[0] < r[15] && p[0] > r[15] - 20){                // detect loops
       // loops++;
@@ -456,7 +455,7 @@ thumb_ble = function(p){
   // if(
     // (cpsr & 0x40000000) === 0x40000000                    // if CPSR.Z == 1
     // ||
-    // (bit(cpsr, 31) !== bit(cpsr, 28))                     // or CPSR.N != CPSR.V:
+    // (b(cpsr, 31) !== b(cpsr, 28))                     // or CPSR.N != CPSR.V:
   // ){
     // if(p[0] < r[15] && p[0] > r[15] - 20){                // detect loops
       // loops++;
@@ -491,5 +490,4 @@ thumb_bl = function(p){
   // r[14] = (r[15] + 4) | 0x1;                              // LR = PC
   // r[15] = p[0];                                           // PC = address
 }
-*/
 

@@ -12,47 +12,47 @@ function trace(){
 
   // Instruction subaddress
   i = r[15] - 0x8000000;
-  
+
   // Disable current highlight
   if(debug){
     document.getElementsByClassName("highlight")[0].className = "";
   }
-  
+
   // THUMB
   if(thumb){
-    
+
     // Instruction index
     i /= 2;
   }
-  
+
   // ARM
   else{
-  
+
     // Instruction index
     i /= 4;
 
     // Execute it
     arm_opcode[i](arm_params[i], arm_cond[i]);
-    
+
     // Highlight it
     if(debug){
       if(thumb){
-        document.getElementById("thumb" + hex(r[15])).className = "highlight";
+        document.getElementById("thumb" + x(r[15])).className = "highlight";
       }
       else{
-        document.getElementById("arm" + hex(r[15])).className = "highlight";
+        document.getElementById("arm" + x(r[15])).className = "highlight";
       }
     }
   }
-  
+
   // Update r15
   if(debug){
-    document.getElementById("r15").innerHTML = hex(r[15], 8);
+    document.getElementById("r15").innerHTML = x(r[15], 8);
   }
 
   // Next instruction subaddress
   i = r[15] - 0x8000000;
-  
+
   // Convert it if needed.
   if(thumb){
     i /= 2;

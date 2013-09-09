@@ -33,29 +33,29 @@ function mem(address, bytes, value, mask){
 
   // Get prefix (bits 24-27 of address)
   prefix = rshift(address, 24);
-  
+
   // Remove prefix from address and handle mirrors
   if(prefix < 8){
     address &= 0x00FFFFFF;
   }
-  
+
   else if(prefix > 0xE){
     prefix = 0xE;
   }
-  
+
   else{
     prefix = 8;
   }
-  
+
   if(mirrors[prefix]){
     address %= mirrors[prefix];
   }
-  
+
   // Handle writes on I/O
   if(prefix === 4 && write){
     //io(address, value);
   }
-  
+
   // Handle mirrors and writes on VRAM
   if(prefix === 6){
     if(address > 0x17FFF && address < 0x20000){

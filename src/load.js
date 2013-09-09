@@ -10,12 +10,12 @@ function load(p){
   // Vars
   var i, xhr;
 
-  // Use AJAX to read the ROM as an arraybuffer
+  // Load and read the ROM as an arraybuffer
   xhr = new XMLHttpRequest;
   xhr.open('GET', p);
   xhr.responseType = 'arraybuffer';
   xhr.send();
-  
+
   // When it is loaded:
   xhr.onload = function(){
 
@@ -30,8 +30,8 @@ function load(p){
         m32[i] = new Uint32Array(m[i]);
       }
     }
-    
-    // Convert and highlight first ARM instruction
+
+    // Convert the first ARM instruction
     convert_ARM(0);
   }
 }
