@@ -75,7 +75,7 @@ function convert_ARM(i){
     }
 
     // Set ASM comment
-    branch_comment(arm_params[i][0]);
+    arm_asm[i] += branch_comment(arm_params[i][0]);
   }
 
   // ARM4 opcodes
@@ -95,7 +95,7 @@ function convert_ARM(i){
     arm_asm[i] = (opcode ? "BL" : "B") + condname + " 0x" + x(arm_params[i][0]);
 
     // Set ASM comment
-    branch_comment(arm_params[i][0]);
+    arm_asm[i] += opcode ? " ;&rarr;" : branch_comment(arm_params[i][0]);
   }
 
   // ARM9 opcodes
@@ -329,10 +329,10 @@ function convert_ARM(i){
 function convert_THUMB(i){
 
   // Vars
-  var pc, instr, t, u, v, w, z, rd, rs, rb, bits0_7, bits6_10, bits6_8, r8_10, cond, label, name;
+  var pc, instr, a, t, u, v, w, z, rd, rs, rb, bits0_7, bits6_10, bits6_8, bits8_10, cond, label, name;
 
   // Value of PC during execution.
-  pc = r[15] + 8;
+  pc = r[15] + 4;
 
   // Default ASM value: unknown.
   thumb_asm[i] = "?";
@@ -352,7 +352,7 @@ function convert_THUMB(i){
   bits0_7 = b(instr, 0, 7);
   bits6_10 = b(instr, 6, 10);
   bits6_8 = b(instr, 6, 8);
-  r8_10 = b(instr, 8, 10);
+  bits8_10 = b(instr, 8, 10);
 
   // THUMB 1/2 instructions
   if(z === 0x0){
@@ -483,7 +483,7 @@ function convert_THUMB(i){
     opcode = b(instr, 11, 12);
 
     // Set params
-    thumb_params[i] = [rd, bits0_7];
+    thumb_params[i] = [bits8_10, bits0_7];
 
     // MOV Rd, nn
     if(opcode === 0){
@@ -522,7 +522,7 @@ function convert_THUMB(i){
       thumb_opcode[i] = thumb_sub_rn;
 
       // Set ASM
-      thumb_asm[i] = "CMP";
+      thumb_asm[i] = "SUB";
     }
 
     // Set ASM params
@@ -687,7 +687,7 @@ function convert_THUMB(i){
     thumb_opcode[i] = thumb_ldr_rn;
 
     // Set params
-    thumb_params[i] = [r8_10, mem((pc & 0xFFFFFFFC) + bits0_7 * 4, 4)];
+    thumb_params[i] = [bits8_10, mem((pc & 0xFFFFFFFC) + bits0_7 * 4, 4)];
 
     // Set ASM
     thumb_asm[i] = "LDR r" + thumb_params[i][0] + ",=#0x" + x(thumb_params[i][1]);
@@ -819,7 +819,7 @@ function convert_THUMB(i){
     }
 
     // Set ASM params
-    thumb_asm[i] += " r" + thumb_params[i][0] + ",[r" + thumb_params[i][1] + ",#0x" + x(thumb_params[i][2]) + "]";
+    thumb_asm[i] += " r" + thumb_params[i][0] + ",[r" + thumb_params[i][1] + (thumb_params[i][2] ? ",#0x" + x(thumb_params[i][2]) : "") + "]";
   }
 
   // THUMB 10 instructions
@@ -852,14 +852,14 @@ function convert_THUMB(i){
     }
 
     // Set ASM params
-    thumb_asm[i] += " r" + thumb_params[i][0] + ",[r" + thumb_params[i][1] + ",#0x" + x(thumb_params[i][2]) + "]";
+    thumb_asm[i] += " r" + thumb_params[i][0] + ",[r" + thumb_params[i][1] + (thumb_params[i][2] ? ",#0x" + x(thumb_params[i][2]) : "") + "]";
   }
 
   // THUMB 11 instructions
   else if(w === 0x9){
 
     // Set params
-    thumb_params[i] = [r8_10, bits0_7 * 4];
+    thumb_params[i] = [bits8_10, bits0_7 * 4];
 
     // LDR Rd, nn
     if(b(instr, 11)){
@@ -933,7 +933,7 @@ function convert_THUMB(i){
       thumb_opcode[i] = thumb_pop;
 
       // Set ASM
-      thumb_asm[i] = "POP etc";
+      thumb_asm[i] = "POP";
     }
 
     // PUSH Rlist
@@ -943,8 +943,20 @@ function convert_THUMB(i){
       thumb_opcode[i] = thumb_push;
 
       // Set ASM
-      thumb_asm[i] = "PUSH etc";
+      thumb_asm[i] = "PUSH";
     }
+    
+    // Set ARM params
+    thumb_asm[i] += " {";
+    for(a = 0; a < 8; a++){
+      if(b(thumb_params[i][0], a)){
+        thumb_asm[i] += "r" + a + ",";
+      }
+    }
+    if(thumb_params[i][1]){
+      thumb_asm[i] += (opcode ? "r13," : "r14,");
+    }
+    thumb_asm[i] = thumb_asm[i].slice(0, -1) + "}";
   }
 
   // THUMB 15 instructions
@@ -954,7 +966,7 @@ function convert_THUMB(i){
     opcode = b(instr, 11);
 
     // Set params
-    thumb_params[i] = [r8_10, bits0_7];
+    thumb_params[i] = [bits8_10, bits0_7];
 
     // STMIA Rb, Rlist
     if(opcode === 0){
@@ -963,7 +975,7 @@ function convert_THUMB(i){
       thumb_opcode[i] = thumb_stmia;
 
       // Set ASM
-      thumb_asm[i] = "STMIA etc";
+      thumb_asm[i] = "STMIA";
     }
 
     // LDMIA Rd, Rlist
@@ -973,8 +985,17 @@ function convert_THUMB(i){
       thumb_opcode[i] = thumb_ldmia;
 
       // Set ASM
-      thumb_asm[i] = "LDMIA etc";
+      thumb_asm[i] = "LDMIA";
     }
+    
+    // Set ARM params
+    thumb_asm[i] += " r" + thumb_params[i][0] + "!,{";
+    for(a = 0; a < 8; a++){
+      if(b(thumb_params[i][1], a)){
+        thumb_asm[i] += "r" + a + ",";
+      }
+    }
+    thumb_asm[i] = thumb_asm[i].slice(0, -1) + "}";
   }
 
   // THUMB 17 SWI instruction
@@ -1021,7 +1042,7 @@ function convert_THUMB(i){
     thumb_asm[i] += " 0x" + x(thumb_params[i][0]);
 
     // Set ASM comment
-    branch_comment(thumb_params[i][0]);
+    thumb_asm[i] += branch_comment(thumb_params[i][0]);
   }
 
   // THUMB 19 instruction
@@ -1049,7 +1070,7 @@ function convert_THUMB(i){
       thumb_opcode[i] = thumb_bl;
 
       // Set ASM
-      thumb_asm[i] = "BL 0x" + x(thumb_params[i][0]);
+      thumb_asm[i] = "BL 0x" + x(thumb_params[i][0]) + " ;&rarr;";
     }
   }
 
@@ -1072,17 +1093,15 @@ function branch_comment(l){
 
   // Up
   if(l < r[15]){
-    arm_asm[i] += " ;&uarr;"
+    return " ;&uarr;"
   }
 
   // Down
-  else if(l > r[15]){
-    arm_asm[i] += " ;&darr;"
+  if(l > r[15]){
+    return " ;&darr;"
   }
 
-  // Left
-  else{
-    arm_asm[i] += " ;&larr;"
-  }
+  // Or left
+  return " ;&larr;"
 }
 
