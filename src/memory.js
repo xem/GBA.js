@@ -4,13 +4,13 @@
  * mem()
  * read or write data in the memory.
  * @param address: the address to read or write.
- * @param bytes: the length of the value to read or write, in bytes (1, 2 or 4).
+ * @parambytes: the length of the value to read or write, inbytes (1, 2 or 4).
  * @param value (optional): the value to write.
- * @param mask (optional): the bit mask to apply to the written value.
+ * @param mask (optional): thebit mask to apply to the written value.
  * @return: if a value is specified, it is written in memory.
  *          else, the the read value is returned.
  */
-function mem(address, bytes, value, mask){
+var mem = function(address, bytes, value, mask){
 
   // Vars
   var i, prefix, write, view;
@@ -34,7 +34,7 @@ function mem(address, bytes, value, mask){
   // Get prefix (bits 24-27 of address)
   prefix = rshift(address, 24);
 
-  // Remove prefix from address and handle mirrors
+  // Remove prefix from address
   if(prefix < 8){
     address &= 0x00FFFFFF;
   }
@@ -47,9 +47,8 @@ function mem(address, bytes, value, mask){
     prefix = 8;
   }
 
-  if(mirrors[prefix]){
-    address %= mirrors[prefix];
-  }
+  // Handle mirrors
+  address %= [,,0x40000,0x8000,,0x400,0x20000,0x400,0x2000000,,,,,,0x1000000][prefix];
 
   // Handle writes on I/O
   if(prefix === 4 && write){
@@ -62,18 +61,18 @@ function mem(address, bytes, value, mask){
       address -= 8000;
     }
     if(write){
-      //vram(address, value, bytes);
+      //vram(address, value,bytes);
     }
   }
 
   // Write a value
   if(write){
-    view[prefix][address / bytes] = value;
+    view[prefix][address /bytes] = value;
   }
 
   // Read a value
   else {
-    return view[prefix][address / bytes] || 0;
+    return view[prefix][address /bytes] || 0;
   }
 }
 

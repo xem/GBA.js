@@ -4,12 +4,12 @@ function minify($buffer){
   $tmp = $buffer;
 
   // JS shortcuts
-  $buffer = str_replace("document.getElementById", "$", $buffer);
+  /*$buffer = str_replace("document.getElementById", "$", $buffer);
   $buffer = str_replace("new ArrayBuffer", "A", $buffer);
   $buffer = str_replace("new Uint8Array", "B", $buffer);
   $buffer = str_replace("new Uint16Array", "C", $buffer);
   $buffer = str_replace("new Uint32Array", "D", $buffer);
-  $buffer = str_replace("Math", "M", $buffer);
+  $buffer = str_replace("Math", "M", $buffer);*/
 
   // ARM
   /*$buffer = str_replace("arm_bx", "aa", $buffer);
@@ -30,8 +30,8 @@ function minify($buffer){
   $buffer = str_replace("arm_add_ri", "an", $buffer);
   $buffer = str_replace("arm_adc_rrn", "aok", $buffer);
   $buffer = str_replace("arm_adc_ri", "ap", $buffer);
-  $buffer = str_replace("arm_sbc_rrn", "aq", $buffer);
-  $buffer = str_replace("arm_sbc_ri", "ar", $buffer);
+  $buffer = str_replace("armbc_rrn", "aq", $buffer);
+  $buffer = str_replace("armbc_ri", "ar", $buffer);
   $buffer = str_replace("arm_rsc_rrn", "as", $buffer);
   $buffer = str_replace("arm_rsc_ri", "at", $buffer);
   $buffer = str_replace("arm_tst_rn", "au", $buffer);
@@ -86,7 +86,7 @@ function minify($buffer){
   $buffer = str_replace("function J", "function hex", $buffer);
   $buffer = str_replace("ror", "K", $buffer);*/
 
-  $buffer .= "// Before: " . strlen($tmp) . ", now: " . strlen($buffer);
+  //$buffer .= "// Before: " . strlen($tmp) . ", now: " . strlen($buffer);
   return $buffer;
 }
 ob_start();
@@ -115,18 +115,16 @@ ob_end_clean();
 *  \_____| |____/ /_/    \_\ (_) | | |___/ *
 *                               _/ |       *
 *  == A HTML5 GBA EMULATOR ==  |__/        *
+<?php echo "*      ( in " . strlen($out) . " bytes )                  *\n"; ?>
 \******************************************/
 
-/** Shortcuts **/
-
-function $(i){return document.getElementById(i)}
-function A(i){return new ArrayBuffer(i)}
-function B(i){return new Uint8Array(i)}
-function C(i){return new Uint16Array(i)}
-function D(i){return new Uint32Array(i)}
-M = Math;
+(function(){
 
 <?php
+
+
 echo minify($out);
 // echo $out;
 ?>
+
+})()

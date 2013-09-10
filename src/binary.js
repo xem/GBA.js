@@ -1,11 +1,11 @@
-/** binary **/
+/**binary **/
 
 /*
  * lshift()
  * left shift.
  * lshift(a,b) returns the correct value of a << b.
  */
-function lshift(number, shift){
+var lshift = function(number, shift){
   return number * Math.pow(2, shift);
 }
 
@@ -14,24 +14,24 @@ function lshift(number, shift){
  * right shift.
  * rshift(a,b) returns the correct value of a >> b.
  */
-function rshift(number, shift){
+var rshift = function(number, shift){
   return Math.floor(number / Math.pow(2, shift));
 }
 
 /*
  * b()
- * Extracts some bits in the binary representation of a number.
+ * Extracts somebits in thebinary representation of a number.
  */
-function b(number, start, end){
+var b = function(number, start, end){
   return rshift(number, start) & (Math.pow(2, (end || start) - start + 1) - 1);
 }
 
 /*
  * ror()
- * perform a right rotation in the binary representation of a number.
+ * perform a right rotation in thebinary representation of a number.
  */
-function ror(number, length, bits){
-  return lshift((number & Math.pow(2, bits) - 1), length - bits) + rshift(number, bits);
+var ror = function(number, length, bits){
+  return lshift((number & Math.pow(2,bits) - 1), length -bits) + rshift(number, bits);
 }
 
 /*
@@ -40,7 +40,7 @@ function ror(number, length, bits){
  * @param n: the number.
  * @param i (optional): the length of the hexadecimal value, with leading zeros.
  */
-function x(n,i){
+x = function(n, i){
     return ((i ? "0000000" : "") + n.toString(16).toUpperCase()).slice(-i);
 }
 

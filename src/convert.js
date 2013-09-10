@@ -6,7 +6,7 @@
  * Try to convert all the ROM in ARM and THUMB instructions.
  * Invalid results when it's used on data or on the wrong instruction set.
  */
-function convert_all(){
+convert_all = function(){
 
   // Vars
   var i;
@@ -32,7 +32,7 @@ function convert_all(){
  * Convert a 32-bit instruction to ARM and Assembler code.
  * @param i: the instruction to convert (as an index of m32).
  */
-function convert_ARM(i){
+var convert_ARM = function(i){
 
   // Vars
   var pc, instr, condname, opcode, rn, nn, rd, l, psr, mask, f, c, op2, name;
@@ -83,7 +83,7 @@ function convert_ARM(i){
   else if(b(instr, 25, 27) === 0x5){
 
     // Read opcode
-    opcode = b(instr, 24);
+    opcode =b(instr, 24);
 
     // Set param
     arm_params[i] = [pc + b(instr, 0, 23) * 4];
@@ -116,7 +116,7 @@ function convert_ARM(i){
     nn = b(instr, 0, 11);
 
     // Set params
-    arm_params[i] = (rn === 15 ? [rd, mem(pc + nn, 4)] : [rd, rn, nn]);
+   arm_params[i] = (rn === 15 ? [rd, mem(pc + nn, 4)] : [rd, rn, nn]);
 
     // LDR
     if(l){
@@ -248,7 +248,7 @@ function convert_ARM(i){
             arm_params[i] = [rd, pc + op2];
 
             // Set ASM
-            arm_asm[i] = "ADD r" + arm_params[i][0] + ",=#0x" + x(arm_params[i][1]);
+            arm_asm[i] = "ADD r" +arm_params[i][0] + ",=#0x" + x(arm_params[i][1]);
           }
 
           // ADD Rd, Rn, Op2 (if Rn != PC)
@@ -326,10 +326,10 @@ function convert_ARM(i){
  * Convert a 16-bit instruction to THUMB and Assembler code.
  * @param i: the instruction to convert (as an index of m16).
  */
-function convert_THUMB(i){
+var convert_THUMB = function(i){
 
   // Vars
-  var pc, instr, a, t, u, v, w, z, rd, rs, rb, bits0_7, bits6_10, bits6_8, bits8_10, cond, label, name;
+  var pc, instr, opcode, a, t, u, v, w, z, rd, rs, rb, bits0_7, bits6_10, bits6_8, bits8_10, cond, label, name;
 
   // Value of PC during execution.
   pc = r[15] + 4;
@@ -349,10 +349,10 @@ function convert_THUMB(i){
   rd = b(instr, 0, 2);
   rs = b(instr, 3, 5);
   rb = b(instr, 3, 5);
-  bits0_7 = b(instr, 0, 7);
-  bits6_10 = b(instr, 6, 10);
-  bits6_8 = b(instr, 6, 8);
-  bits8_10 = b(instr, 8, 10);
+ bits0_7 = b(instr, 0, 7);
+ bits6_10 =b(instr, 6, 10);
+ bits6_8 =b(instr, 6, 8);
+ bits8_10 =b(instr, 8, 10);
 
   // THUMB 1/2 instructions
   if(z === 0x0){
@@ -384,7 +384,7 @@ function convert_THUMB(i){
         thumb_opcode[i] = thumb_add_rrr;
 
         // Set params
-        thumb_params[i] = [rd, rs, bits6_8];
+        thumb_params[i] = [rd, rs,bits6_8];
 
         // Set ASM
         thumb_asm[i] = "ADD r" + thumb_params[i][0] + ",r" + thumb_params[i][1] + ",r" + thumb_params[i][2];
@@ -448,7 +448,7 @@ function convert_THUMB(i){
       // LSR Rd, Rs, Offset
       else if(opcode === 0x1){
         if(bits6_10 === 0){
-          bits6_10 = 32;
+         bits6_10 = 32;
         }
 
         // Set instruction
@@ -461,7 +461,7 @@ function convert_THUMB(i){
       // ASR Rd, Rs, Offset
       else if(opcode === 0x2){
         if(bits6_10 === 0){
-          bits6_10 = 32;
+         bits6_10 = 32;
         }
 
         // Set instruction
@@ -480,7 +480,7 @@ function convert_THUMB(i){
   else if(z === 0x1){
 
     // Read opcode
-    opcode = b(instr, 11, 12);
+    opcode =b(instr, 11, 12);
 
     // Set params
     thumb_params[i] = [bits8_10, bits0_7];
@@ -533,7 +533,7 @@ function convert_THUMB(i){
   else if(u === 0x10){
 
     // Read opcode
-    opcode = b(instr, 6, 9);
+    opcode =b(instr, 6, 9);
 
     // Set params
     thumb_params[i] = [rd, rs];
@@ -616,7 +616,7 @@ function convert_THUMB(i){
   else if(u === 0x11){
 
     // Read opcode
-    opcode = b(instr, 8, 9);
+    opcode =b(instr, 8, 9);
 
     // Read Rd
     rd = lshift(b(instr, 7), 3) + rd;
@@ -697,7 +697,7 @@ function convert_THUMB(i){
   else if(w === 0x5){
 
     // Read opcode
-    opcode = b(instr, 10, 11);
+    opcode =b(instr, 10, 11);
 
     // Set params
     thumb_params[i] = [rd, rb, bits6_8];
@@ -768,10 +768,10 @@ function convert_THUMB(i){
   else if(z === 0x3){
 
     // Read opcode
-    opcode = b(instr, 11, 12);
+    opcode =b(instr, 11, 12);
 
     // Set params
-    thumb_params[i] = [rd, rb, bits6_10];
+    thumb_params[i] = [rd, rb,bits6_10];
 
     // STR Rd, Rb, nn
     if(opcode === 0){
@@ -826,7 +826,7 @@ function convert_THUMB(i){
   else if(w === 0x8){
 
     // Read opcode
-    opcode = b(instr, 11);
+    opcode =b(instr, 11);
 
     // Set params
     thumb_params[i] = [rd, rb, bits6_10];
@@ -895,7 +895,7 @@ function convert_THUMB(i){
   else if(t === 0xB0){
 
     // Read nn
-    nn = b(instr, 0, 6) * 4;
+    nn =b(instr, 0, 6) * 4;
 
     // Read nn sign
     if(b(instr, 7) === 1){
@@ -921,7 +921,7 @@ function convert_THUMB(i){
   else if(w === 0xB){
 
     // Read opcode
-    opcode = b(instr, 11);
+    opcode =b(instr, 11);
 
     // Set params
     thumb_params[i] = [bits0_7, b(instr, 8)];
@@ -945,8 +945,8 @@ function convert_THUMB(i){
       // Set ASM
       thumb_asm[i] = "PUSH";
     }
-    
-    // Set ARM params
+
+    // Set ASM params
     thumb_asm[i] += " {";
     for(a = 0; a < 8; a++){
       if(b(thumb_params[i][0], a)){
@@ -963,7 +963,7 @@ function convert_THUMB(i){
   else if(w === 0xC){
 
     // Read opcode
-    opcode = b(instr, 11);
+    opcode =b(instr, 11);
 
     // Set params
     thumb_params[i] = [bits8_10, bits0_7];
@@ -987,8 +987,8 @@ function convert_THUMB(i){
       // Set ASM
       thumb_asm[i] = "LDMIA";
     }
-    
-    // Set ARM params
+
+    // Set ASM params
     thumb_asm[i] += " r" + thumb_params[i][0] + "!,{";
     for(a = 0; a < 8; a++){
       if(b(thumb_params[i][1], a)){
@@ -1014,7 +1014,7 @@ function convert_THUMB(i){
     if(bits0_7 > 254){
       bits0_7 -= 512;
     }
-    
+
     // Set params
     thumb_params[i] = [pc + bits0_7];
 
@@ -1022,14 +1022,14 @@ function convert_THUMB(i){
     if(v === 0x1C){
 
       // Set instruction
-      thumb_opcode[i] = thumb_b;
+     thumb_opcode[i] = thumb_b;
     }
 
     // THUMB 16: B{cond} label
     else{
 
       // Read condition
-      cond = b(instr, 8, 11);
+      cond =b(instr, 8, 11);
 
       // Set instruction
       thumb_opcode[i] = [thumb_beq, thumb_bne, thumb_bcs, thumb_bcc, thumb_bmi, thumb_bpl, thumb_bvs, thumb_bvc, thumb_bhi, thumb_bls, thumb_bge, thumb_blt, thumb_bgt, thumb_ble][cond];
@@ -1085,11 +1085,11 @@ function convert_THUMB(i){
 }
 
 /*
- * branch_comment()
- * Assembler comment for branching functions
+ *branch_comment()
+ * Assembler comment forbranching functions
  * @param l: label
  */
-function branch_comment(l){
+var branch_comment = function(l){
 
   // Up
   if(l < r[15]){

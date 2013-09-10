@@ -5,7 +5,7 @@
  * For debug purpose only.
  * Decode and execute the next instruction, update the debug interface.
  */
-function trace(){
+trace = function(){
 
   // Vars
   var i;
@@ -23,6 +23,9 @@ function trace(){
 
     // Instruction index
     i /= 2;
+
+    // Execute it
+    thumb_opcode[i](thumb_params[i]);
   }
 
   // ARM
@@ -33,15 +36,15 @@ function trace(){
 
     // Execute it
     arm_opcode[i](arm_params[i], arm_cond[i]);
+  }
 
-    // Highlight it
-    if(debug){
-      if(thumb){
-        document.getElementById("thumb" + x(r[15])).className = "highlight";
-      }
-      else{
-        document.getElementById("arm" + x(r[15])).className = "highlight";
-      }
+  // Highlight the executed instruction
+  if(debug){
+    if(thumb){
+      document.getElementById("thumb" + x(r[15])).className = "highlight";
+    }
+    else{
+      document.getElementById("arm" + x(r[15])).className = "highlight";
     }
   }
 

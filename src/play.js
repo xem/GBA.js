@@ -4,7 +4,7 @@
  * play()
  * Launch the ROM
  */
-function play(){
+play = function(){
 
 }
 

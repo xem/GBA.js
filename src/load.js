@@ -5,7 +5,7 @@
  * Load a ROM, save it in the memory and create different views
  * @param p: the ROM's path
  */
-function load(p){
+load = function(p){
 
   // Vars
   var i, xhr;
@@ -33,6 +33,12 @@ function load(p){
 
     // Convert the first ARM instruction
     convert_ARM(0);
+
+    // Temp
+    //convert_all();
+    //for(i = 15; i--;){
+    //  trace();
+    //}
   }
 }
 
