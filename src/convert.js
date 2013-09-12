@@ -1,10 +1,49 @@
 /** ROM conversion **/
 
 /*
+ * arm_opcode,arm_params, arm_asm, arm_cond,thumb_opcode, thumb_params, thumb_asm
+ * The ROM is interpreted as ARM (32-bit) and THUMB (16-bit) instructions
+ * These arrays contain each opcode's function, params and assembler code
+ * ARM opcodes are conditional, their conditions are stored in arm_cond
+ */
+var arm_opcode = [];
+var arm_params = [];
+var arm_asm = [];
+var arm_cond = [];
+
+var thumb_opcode = [];
+var thumb_params = [];
+var thumb_asm = [];
+
+/*
+ * condnames
+ * suffix for conditional instructions
+ */
+var condnames =
+[
+  "EQ",
+  "NE",
+  "CS",
+  "CC",
+  "MI",
+  "PL",
+  "VS",
+  "VC",
+  "HI",
+  "LS",
+  "GE",
+  "LT",
+  "GT",
+  "LE",
+  "",
+  "NV"
+];
+
+/*
  * convert_all()
- * For debug purpose only, optional.
- * Try to convert all the ROM in ARM and THUMB instructions.
- * Invalid results when it's used on data or on the wrong instruction set.
+ * For debug purpose only, optional
+ * Try to convert all the ROM in ARM and THUMB instructions
+ * Invalid results when it's used on data or on the wrong instruction set
  */
 convert_all = function(){
 
@@ -29,24 +68,24 @@ convert_all = function(){
 
 /*
  * convert_ARM()
- * Convert a 32-bit instruction to ARM and Assembler code.
- * @param i: the instruction to convert (as an index of m32).
+ * Convert a 32-bit instruction to ARM and Assembler code
+ * @param i: the instruction to convert (as an index of m32)
  */
 var convert_ARM = function(i){
-
+  
   // Vars
   var pc, instr, condname, opcode, rn, nn, rd, l, psr, mask, f, c, op2, name;
 
-  // Value of PC during execution.
+  // Value of PC during execution
   pc = r[15] + 8;
 
-  // Default ASM value: unknown.
+  // Default ASM value: unknown
   arm_asm[i] = "?";
 
-  // Read the instruction.
+  // Read the instruction
   instr = m32[8][i];
 
-  // Read the instruction's condition.
+  // Read the instruction's condition
   arm_cond[i] = b(instr, 28, 31);
   condname = condnames[arm_cond[i]];
 
@@ -172,7 +211,7 @@ var convert_ARM = function(i){
     // x: b(instr, 17),
     c = b(instr, 16);
     // imms: b(instr, 8, 11),
-    // imm: b(instr, 0, 7).
+    // imm: b(instr, 0, 7)
     psr = b(instr, 22);
 
     // Reset mask
@@ -310,34 +349,34 @@ var convert_ARM = function(i){
       }
     }
   }
-
+  
   // Update debug interface
   if(debug){
-    name = document.getElementById("armvalue" + x(r[15]));
+    name = $("armvalue" + x(r[15]));
     if(name){
       name.innerHTML = x(m32[8][i], 8);
-      document.getElementById("armname" + x(r[15])).innerHTML = arm_asm[i];
+      $("armname" + x(r[15])).innerHTML = arm_asm[i];
     }
   }
 }
 
 /*
  * convert_THUMB
- * Convert a 16-bit instruction to THUMB and Assembler code.
- * @param i: the instruction to convert (as an index of m16).
+ * Convert a 16-bit instruction to THUMB and Assembler code
+ * @param i: the instruction to convert (as an index of m16)
  */
 var convert_THUMB = function(i){
 
   // Vars
   var pc, instr, opcode, a, t, u, v, w, z, rd, rs, rb, bits0_7, bits6_10, bits6_8, bits8_10, cond, label, name;
 
-  // Value of PC during execution.
+  // Value of PC during execution
   pc = r[15] + 4;
 
-  // Default ASM value: unknown.
+  // Default ASM value: unknown
   thumb_asm[i] = "?";
 
-  // Read the instruction.
+  // Read the instruction
   instr = m16[8][i];
 
   // Bit fields
@@ -1076,10 +1115,10 @@ var convert_THUMB = function(i){
 
   // Update debug interface
   if(debug){
-    name = document.getElementById("thumbvalue" + x(r[15]));
+    name = $("thumbvalue" + x(r[15]));
     if(name){
       name.innerHTML = x(m16[8][i], 4);
-      document.getElementById("thumbname" + x(r[15])).innerHTML = thumb_asm[i];
+      $("thumbname" + x(r[15])).innerHTML = thumb_asm[i];
     }
   }
 }

@@ -2,8 +2,8 @@
 
 /*
  * trace()
- * For debug purpose only.
- * Decode and execute the next instruction, update the debug interface.
+ * For debug purpose only
+ * Decode and execute the next instruction, update the debug interface
  */
 trace = function(){
 
@@ -41,22 +41,26 @@ trace = function(){
   // Highlight the executed instruction
   if(debug){
     if(thumb){
-      document.getElementById("thumb" + x(r[15])).className = "highlight";
+      $("thumb" + x(r[15])).className = "highlight";
     }
     else{
-      document.getElementById("arm" + x(r[15])).className = "highlight";
+      $("arm" + x(r[15])).className = "highlight";
     }
   }
 
-  // Update r15
   if(debug){
-    document.getElementById("r15").innerHTML = x(r[15], 8);
+
+    // Update r15
+    $("r15").innerHTML = x(r[15], 8);
+
+    // Update cpsr
+    $("cpsr").innerHTML = x(cpsr, 8);
   }
 
   // Next instruction subaddress
   i = r[15] - 0x8000000;
 
-  // Convert it if needed.
+  // Convert it if needed
   if(thumb){
     i /= 2;
     if(!thumb_opcode[i]){

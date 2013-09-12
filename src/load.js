@@ -35,10 +35,10 @@ load = function(p){
     convert_ARM(0);
 
     // Temp
-    //convert_all();
-    //for(i = 15; i--;){
-    //  trace();
-    //}
+    convert_all();
+    for(i = 16; i--;){
+      trace();
+    }
   }
 }
 

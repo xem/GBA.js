@@ -11,6 +11,11 @@ var arm_bx = function(p){
 
   // THUMB mode
   thumb = 1;
+  
+  // Debug
+  if(debug){
+    $("flagt").checked = true;
+  }
 }
 
 var arm_blx = function(p){
@@ -44,11 +49,7 @@ var arm_add_ri = function(p){
   r[15] += 4;
 
   // Debug
-  if(debug){
-
-    // Update Rd
-    document.getElementById("r" + p[0]).innerHTML = x(r[p[0]], 8);
-  }
+  update_r(p[0]);
 }
 
 var arm_mov_ri = function(p){
@@ -60,28 +61,17 @@ var arm_mov_ri = function(p){
   r[15] += 4;
 
   // Debug
-  if(debug){
-
-    // Update Rd
-    document.getElementById("r" + p[0]).innerHTML = x(r[p[0]], 8);
-  }
+  update_r(p[0]);
 }
 
 // ARM6
 var arm_msr_cpsr = function(p){
 
-  // CPSR[field] = Op (with abit mask)
+  // CPSR[field] = Op (with a bit mask)
   cpsr = r[p[0]] & p[1];
 
   // Next
   r[15] += 4;
-
-  // Debug
-  if(debug){
-
-    // Update Rd
-    document.getElementById("cpsr").innerHTML = x(cpsr, 8);
-  }
 }
 
 var arm_msr_spsr = function(p){
@@ -119,10 +109,6 @@ var arm_ldr_ri = function(p){
   r[15] += 4;
 
   // Debug
-  if(debug){
-
-    // Update Rd
-    document.getElementById("r" + p[0]).innerHTML = x(r[p[0]], 8);
-  }
+  update_r(p[0]);
 }
 

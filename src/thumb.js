@@ -2,13 +2,13 @@
 
 // THUMB 1
 var thumb_lsl_rrn = function(p){
-
+  
   // Rd = Rs << nn
-  r[p[0]] = lshift(r[p[1]], p[2]);
+  var val = r[p[0]] = lshift(r[p[1]], p[2]);
 
   // if not LSL #0, update flag C
   if(p[2]){
-    update_cpsr_c(p[0]);
+    update_cpsr_c(p[0], val);
   }
 
   // If bit 31 is set, stay positive
@@ -22,13 +22,9 @@ var thumb_lsl_rrn = function(p){
 
   // Next
   r[15] += 2;
-
+  
   // Debug
-  if(debug){
-
-    // Update Rd
-    document.getElementById("r" + p[0]).innerHTML = x(r[p[0]], 8);
-  }
+  update_r(p[0]);
 }
 
 var thumb_lsr = function(p){
@@ -116,11 +112,21 @@ var thumb2_mov_rr = function(p){
 // THUMB 3
 
 var thumb_mov_rn = function(p){
-  // trace += "MOV r" + p[0] + ",#0x" + p[1].toString(16);
-  // r[p[0]] = p[1];                                     // Rd = nn
-  // update_cpsr_n(p[0]);                                // update N flag
-  // update_cpsr_z(p[0]);                                // update Z flag
-  // r[15] += 2;
+  
+  // Rd = nn
+  r[p[0]] = p[1];
+  
+  // update N flag
+  update_cpsr_n(p[0]);
+  
+  // update Z flag
+  update_cpsr_z(p[0]);
+  
+  // Next
+  r[15] += 2;
+  
+  // Debug
+  update_r(p[0]);
 }
 
 var thumb_cmp_rn = function(p){
@@ -234,11 +240,7 @@ var thumb_ldr_rn = function(p){
   r[15] += 2;
 
   // Debug
-  if(debug){
-
-    // Update Rd
-    document.getElementById("r" + p[0]).innerHTML = x(r[p[0]], 8);
-  }
+  update_r(p[0]);
 }
 
 // THUMB 7
@@ -520,8 +522,11 @@ var thumb_b = function(p){
 // THUMB 19
 
 var thumb_bl = function(p){
-  // trace += "BL #0x" + p[0].toString(16);
-  // r[14] = (r[15] + 4) | 0x1;                              // LR = PC
-  // r[15] = p[0];                                           // PC = address
+  
+  // LR = PC
+  r[14] = (r[15] + 4) | 0x1;
+  
+  // PC = address
+  r[15] = p[0];
 }
 

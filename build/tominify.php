@@ -3,8 +3,10 @@ header("Content-Type: text/javascript; charset=utf-8");
 function minify($buffer){
   $tmp = $buffer;
 
+  $buffer = str_replace("\n", "\n  ", $buffer);
+  
   // JS shortcuts
-  /*$buffer = str_replace("document.getElementById", "$", $buffer);
+  /*$buffer = str_replace("$", "$", $buffer);
   $buffer = str_replace("new ArrayBuffer", "A", $buffer);
   $buffer = str_replace("new Uint8Array", "B", $buffer);
   $buffer = str_replace("new Uint16Array", "C", $buffer);
@@ -91,7 +93,7 @@ function minify($buffer){
 }
 ob_start();
 
-include("../src/globals.js");
+include("../src/dom.js");
 include("../src/cpu.js");
 include("../src/memory.js");
 include("../src/screen.js");
@@ -115,12 +117,12 @@ ob_end_clean();
 *  \_____| |____/ /_/    \_\ (_) | | |___/ *
 *                               _/ |       *
 *  == A HTML5 GBA EMULATOR ==  |__/        *
-<?php echo "*      ( in " . strlen($out) . " bytes )                  *\n"; ?>
+<?php echo "*      ( in " . (strlen($out) + 530) . " bytes )                  *\n"; ?>
 \******************************************/
 
 (function(){
 
-<?php
+  <?php
 
 
 echo minify($out);

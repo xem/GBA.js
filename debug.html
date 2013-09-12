@@ -9,7 +9,7 @@
     html, body { overflow: hidden }
     b { font-weight: bold; padding: 2px 10px; display: inline-block }
     h1 { font-size: 36px }
-    table { border-collapse: collapse; }
+    table { border-collapse: collapse }
     td { border: 2px solid #ddd; vertical-align: baseline; white-space: pre }
     #arm, #thumb { min-width: 50% }
     #cpu-ram { min-width: 160px; max-width: 160px; width: 160px; padding: 0 0 0 10px }
@@ -42,7 +42,7 @@
   <option value="roms/Tonc/first.gba" selected>first</option>
   <option value="roms/tonc/m3_demo.gba">mode 3</option>
   <option value="roms/tonc/pageflip.gba">page flip</option>
-</select><button onclick="load(document.getElementById('rom').value);document.getElementById('rom').disabled='disabled';this.disabled='disabled';document.getElementById('convert').disabled='';document.getElementById('trace').disabled='';document.getElementById('play').disabled='';">Load</button> <button id=convert disabled onclick="convert_all();this.disabled='disabled'" title="optional">Convert all</button> <button id=trace disabled onclick="trace()">Trace</button> <button id=trace disabled>End current loop</button> <button id=play disabled>Play</button> Stop at <input id=stopaddress value=08000000> <button onclick="window.location=window.location">Clear</button></td>
+</select><button onclick="load($('rom').value);$('rom').disabled='disabled';this.disabled='disabled';$('convert').disabled='';$('trace').disabled='';$('play').disabled='';">Load</button> <button id=convert disabled onclick="convert_all();this.disabled='disabled'" title="optional">Convert all</button> <button id=trace disabled onclick="trace()">Trace</button> <button id=trace disabled>End current loop</button> <button id=play disabled>Play</button> Stop at <input id=stopaddress value=08000000> <button onclick="window.location=window.location">Clear</button></td>
     </tr>
     <tr>
       <td rowspan=2 id=arm><b>ROM (ARM)</b>
@@ -71,8 +71,8 @@ spsr  <span id=spsr>00000000</span>
 void  <span id=void>00000000</span>
 
 <b>Flags</b>
-<div><input type=checkbox id=flagz> z <input type=checkbox id=flagi> i <input type=checkbox id=flagn> n <input type=checkbox id=flagf> f
-<input type=checkbox id=flagc> c <input type=checkbox id=flagt> t <input type=checkbox id=flagv> v <input type=checkbox id=flagq> q</div>
+<div><input type=checkbox id=flagn> n <input type=checkbox id=flagz> z <input type=checkbox id=flagc> c <input type=checkbox id=flagv> v
+<input type=checkbox id=flagi> i <input type=checkbox id=flagf> f <input type=checkbox id=flagt> t <input type=checkbox id=flagq> q</div>
 <b>RAM</b>
 <div id=raminner></div></td>
       <td id=screen><div><canvas id=canvas0 width=240 height=160></canvas>
@@ -84,7 +84,7 @@ void  <span id=void>00000000</span>
       <td></td>
     </tr>
   </table>
-  <script src="src/globals.js"></script>
+  <script src="src/dom.js"></script>
   <script src="src/cpu.js"></script>
   <script src="src/memory.js"></script>
   <script src="src/screen.js"></script>
@@ -110,7 +110,7 @@ void  <span id=void>00000000</span>
         html += "...\n";
       }
     }
-    document.getElementById("arminner").innerHTML = html;
+    $("arminner").innerHTML = html;
 
     // Show THUMB code debugger
     html = "";
@@ -123,17 +123,17 @@ void  <span id=void>00000000</span>
       }
       html += "<span id=thumb" + x(i) + "><span id=thumbaddress" + x(i) + ">" + x(i) + "</span>  <span id=thumbvalue" + x(i) + ">????</span>  <span id=thumbname" + x(i) + ">?</span></span>\n";
     }
-    document.getElementById("thumbinner").innerHTML = html;
+    $("thumbinner").innerHTML = html;
 
     // Show IWRAM debugger
     html = "";
     for(i = 0x3008000; i >= 0x3000000; i -= 4){
       html += x(i) + " <span id=memory" + x(i) + ">00000000</span>\n";
     }
-    document.getElementById("raminner").innerHTML = html;
+    $("raminner").innerHTML = html;
 
     // Highlight first instruction
-    document.getElementById("arm8000000").className = "highlight";
+    $("arm8000000").className = "highlight";
   </script>
 </body>
 </html>
