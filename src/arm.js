@@ -11,11 +11,6 @@ var arm_bx = function(p){
 
   // THUMB mode
   thumb = 1;
-  
-  // Debug
-  if(debug){
-    $("flagt").checked = true;
-  }
 }
 
 var arm_blx = function(p){
@@ -47,9 +42,6 @@ var arm_add_ri = function(p){
 
   // Next
   r[15] += 4;
-
-  // Debug
-  update_r(p[0]);
 }
 
 var arm_mov_ri = function(p){
@@ -59,9 +51,6 @@ var arm_mov_ri = function(p){
 
   // Next
   r[15] += 4;
-
-  // Debug
-  update_r(p[0]);
 }
 
 // ARM6
@@ -107,8 +96,5 @@ var arm_ldr_ri = function(p){
 
   // Next
   r[15] += 4;
-
-  // Debug
-  update_r(p[0]);
 }
 

@@ -8,20 +8,15 @@
 trace = function(){
 
   // Vars
-  var i;
+  var i, instr;
 
   // Instruction subaddress
-  i = r[15] - 0x8000000;
-
-  // Disable current highlight
-  if(debug){
-    document.getElementsByClassName("highlight")[0].className = "";
-  }
+  i = r[15] % 0x2000000;
 
   // THUMB
   if(thumb){
 
-    // Instruction index
+    // Get the next instruction's index
     i /= 2;
 
     // Execute it
@@ -31,30 +26,16 @@ trace = function(){
   // ARM
   else{
 
-    // Instruction index
+    // Get the next instruction's index
     i /= 4;
 
     // Execute it
     arm_opcode[i](arm_params[i], arm_cond[i]);
   }
 
-  // Highlight the executed instruction
+  // Update debug interface
   if(debug){
-    if(thumb){
-      $("thumb" + x(r[15])).className = "highlight";
-    }
-    else{
-      $("arm" + x(r[15])).className = "highlight";
-    }
-  }
-
-  if(debug){
-
-    // Update r15
-    $("r15").innerHTML = x(r[15], 8);
-
-    // Update cpsr
-    $("cpsr").innerHTML = x(cpsr, 8);
+    update_debug_interface();
   }
 
   // Next instruction subaddress

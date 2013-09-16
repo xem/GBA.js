@@ -32,12 +32,6 @@ var spsr = 0;
 var thumb = 0;
 
 /*
- * loops
- * small loops counter
- */
-var loops = -1;
-
-/*
  * update_r
  * for debug purpose only
  * update the value of a register
@@ -55,23 +49,23 @@ var update_r = function(rd){
  * @param rd: register to test
  */
 var update_cpsr_n = function(rd){
-  
+
   // If Rd is negative (bit 31 is set)
   if(b(r[rd], 31) === 1){
-    
+
     // Set CPSR flag n (bit 31)
     cpsr |= 0x80000000;
-    
+
     // Update checkbox
     if(debug){
       $("flagn").checked = true;
     }
   }
   else{
-    
+
     // Unset CPSR flag n
     cpsr &= 0x7FFFFFFF;
-    
+
     // Update checkbox
     if(debug){
       $("flagn").checked = false;
@@ -85,23 +79,23 @@ var update_cpsr_n = function(rd){
  * @param rd: register to test
  */
 var update_cpsr_z = function(rd){
-  
+
   // If Rd is zero
   if(r[rd] === 0){
-    
+
     // Set CPSR flag z (bit 30)
     cpsr |= 0x40000000;
-    
+
     // Update checkbox
     if(debug){
       $("flagz").checked = true;
     }
   }
   else{
-    
+
     // Unset CPSR flag z
     cpsr &= 0xBFFFFFFF;
-    
+
     // Update checkbox
     if(debug){
       $("flagz").checked = false;
@@ -116,23 +110,23 @@ var update_cpsr_z = function(rd){
  * @param val: value stored in the register
  */
 var update_cpsr_c = function(rd, val){
-  
+
   // If the value is different from the register
-  if(val != r[rd]){                             
-    
+  if(val != r[rd]){
+
     // Set CPSR flag c (bit 29)
     cpsr |= 0x20000000;
-    
+
     // Update checkbox
     if(debug){
       $("flagc").checked = true;
     }
   }
   else{
-    
+
     // Unset CPSR flag z
     cpsr &= 0xDFFFFFFF;
-    
+
     // Update checkbox
     if(debug){
       $("flagc").checked = false;

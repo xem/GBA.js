@@ -72,7 +72,7 @@ convert_all = function(){
  * @param i: the instruction to convert (as an index of m32)
  */
 var convert_ARM = function(i){
-  
+
   // Vars
   var pc, instr, condname, opcode, rn, nn, rd, l, psr, mask, f, c, op2, name;
 
@@ -349,7 +349,7 @@ var convert_ARM = function(i){
       }
     }
   }
-  
+
   // Update debug interface
   if(debug){
     name = $("armvalue" + x(r[15]));

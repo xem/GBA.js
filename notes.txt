@@ -1,0 +1,9 @@
+todo
+- remplacer tous les ARM/THUMB R*, [R15, nn] par une même instruction  genre MOVimm R*, NN.
+
+Flag:
+31    N - Sign Flag       (0=Not Signed, 1=Signed)
+30    Z - Zero Flag       (0=Not Zero, 1=Zero)
+29    C - Carry Flag      (0=No Carry, 1=Carry)
+28    V - Overflow Flag   (0=No Overflow, 1=Overflow)
+

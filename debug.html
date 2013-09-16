@@ -5,19 +5,21 @@
   <title>GBA.js debugger</title>
   <style>
     * { margin: 0; padding: 0; -moz-box-sizing: border-box; box-sizing: border-box; font: normal 12px/12px monospace }
-    table { width: 100%; max-height: 535px }
+    table { max-width: 800px; max-height: 535px }
     html, body { overflow: hidden }
     b { font-weight: bold; padding: 2px 10px; display: inline-block }
     h1 { font-size: 36px }
     table { border-collapse: collapse }
     td { border: 2px solid #ddd; vertical-align: baseline; white-space: pre }
-    #arm, #thumb { min-width: 50% }
-    #cpu-ram { min-width: 160px; max-width: 160px; width: 160px; padding: 0 0 0 10px }
+    #arm { width: 280px; max-width: 280px; min-width: 280px }
+    #thumb { width: 250px; max-width: 250px; min-width: 250px }
+    #cpu-ram { min-width: 140px; max-width: 140px; width: 140px; padding: 0 0 0 5px }
     #cpu-ram b { padding: 0 }
+    #cpu-ram input { margin: 0 0 0 3px }
     a#thumb { display: none }
-    #arm div, #thumb div { height: 485px; overflow: auto; padding: 0 10px }
-    #registers { padding: 0 10px }
-    #flags div { padding: 2px 10px }
+    #arm div, #thumb div { height: 485px; overflow: auto; overflow-x: hidden; padding: 0 5px }
+    #registers { padding: 0 5px }
+    #flags div { padding: 2px 5px }
     #screen { min-width: 480px; max-width: 480px; width: 480px; height: 320px; background: #000; color: #fff; text-align: center; vertical-align: middle }
     #screen div { width: 480px; height: 320px; position: relative }
     canvas { position: absolute; top: 80px; right: 120px; -moz-transform: scale(2); -webkit-transform: scale(2); transform: scale(2) }
@@ -42,7 +44,7 @@
   <option value="roms/Tonc/first.gba" selected>first</option>
   <option value="roms/tonc/m3_demo.gba">mode 3</option>
   <option value="roms/tonc/pageflip.gba">page flip</option>
-</select><button onclick="load($('rom').value);$('rom').disabled='disabled';this.disabled='disabled';$('convert').disabled='';$('trace').disabled='';$('play').disabled='';">Load</button> <button id=convert disabled onclick="convert_all();this.disabled='disabled'" title="optional">Convert all</button> <button id=trace disabled onclick="trace()">Trace</button> <button id=trace disabled>End current loop</button> <button id=play disabled>Play</button> Stop at <input id=stopaddress value=08000000> <button onclick="window.location=window.location">Clear</button></td>
+</select><button onclick="load($('rom').value);$('rom').disabled='disabled';this.disabled='disabled';$('convert').disabled='';$('trace').disabled='';$('play').disabled='';">Load</button> <button id=convert disabled onclick="convert_all();this.disabled='disabled'" title="optional">Convert all</button> <button id=trace disabled onclick="trace()">Trace</button> <button id=endloop disabled onclick="end_current_loop()">End current loop</button> <button id=play disabled>Play</button> Stop at <input id=stopaddress value=08000000> <button onclick="window.location=window.location">Clear</button></td>
     </tr>
     <tr>
       <td rowspan=2 id=arm><b>ROM (ARM)</b>
@@ -66,13 +68,13 @@ r12   <span id=r12>00000000</span>
 r13   <span id=r13>03007F00</span>
 r14   <span id=r14>00000000</span>
 r15   <span id=r15>08000000</span>
+void  <span id=r16>00000000</span>
 cpsr  <span id=cpsr>0000001F</span>
 spsr  <span id=spsr>00000000</span>
-void  <span id=void>00000000</span>
 
 <b>Flags</b>
-<div><input type=checkbox id=flagn> n <input type=checkbox id=flagz> z <input type=checkbox id=flagc> c <input type=checkbox id=flagv> v
-<input type=checkbox id=flagi> i <input type=checkbox id=flagf> f <input type=checkbox id=flagt> t <input type=checkbox id=flagq> q</div>
+<div>n<input type=checkbox id=flagn> z<input type=checkbox id=flagz> c<input type=checkbox id=flagc> v<input type=checkbox id=flagv>
+i<input type=checkbox id=flagi> f<input type=checkbox id=flagf> t<input type=checkbox id=flagt> q<input type=checkbox id=flagq></div>
 <b>RAM</b>
 <div id=raminner></div></td>
       <td id=screen><div><canvas id=canvas0 width=240 height=160></canvas>
@@ -95,6 +97,7 @@ void  <span id=void>00000000</span>
   <script src="src/arm.js"></script>
   <script src="src/thumb.js"></script>
   <script src="src/binary.js"></script>
+  <script src="src/loops.js"></script>
   <script>
     // Enable debug mode
     debug = true;
@@ -105,7 +108,7 @@ void  <span id=void>00000000</span>
       if((i > 0x8000000 && i < 0x80000C0) || (i > 0x80000C0 && i < 0x80000E0)){
         continue;
       }
-      html += "<span id=arm" + x(i) + "><span id=armaddress" + x(i) + ">" + x(i) + "</span>  <span id=armvalue" + x(i) + ">????????</span>  <span id=armname" + x(i) + ">?</span></span>\n";
+      html += "<span id=arm" + x(i) + "><span id=armaddress" + x(i) + ">" + x(i) + "</span> <span id=armvalue" + x(i) + ">????????</span> <span id=armname" + x(i) + ">?</span></span>\n";
       if(i == 0x8000000 || i == 0x80000C0){
         html += "...\n";
       }
@@ -121,7 +124,7 @@ void  <span id=void>00000000</span>
       if(i < 0x80000E0){
         continue;
       }
-      html += "<span id=thumb" + x(i) + "><span id=thumbaddress" + x(i) + ">" + x(i) + "</span>  <span id=thumbvalue" + x(i) + ">????</span>  <span id=thumbname" + x(i) + ">?</span></span>\n";
+      html += "<span id=thumb" + x(i) + "><span id=thumbaddress" + x(i) + ">" + x(i) + "</span> <span id=thumbvalue" + x(i) + ">????</span> <span id=thumbname" + x(i) + ">?</span></span>\n";
     }
     $("thumbinner").innerHTML = html;
 

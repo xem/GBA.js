@@ -36,9 +36,9 @@ load = function(p){
 
     // Temp
     convert_all();
-    for(i = 16; i--;){
-      trace();
-    }
+    //for(i = 25; i--;){
+      //trace();
+    //}
   }
 }
 
