@@ -20,7 +20,7 @@
     #arm div, #thumb div { height: 485px; overflow: auto; overflow-x: hidden; padding: 0 5px }
     #registers { padding: 0 5px }
     #flags div { padding: 2px 5px }
-    #screen { min-width: 480px; max-width: 480px; width: 480px; height: 320px; background: #000; color: #fff; text-align: center; vertical-align: middle }
+    #screen { min-width: 480px; max-width: 480px; width: 480px; height: 320px; background: #000; }
     #screen div { width: 480px; height: 320px; position: relative }
     canvas { position: absolute; top: 80px; right: 120px; -moz-transform: scale(2); -webkit-transform: scale(2); transform: scale(2) }
     #raminner { height: 180px; overflow: auto }
@@ -44,7 +44,7 @@
   <option value="roms/Tonc/first.gba" selected>first</option>
   <option value="roms/tonc/m3_demo.gba">mode 3</option>
   <option value="roms/tonc/pageflip.gba">page flip</option>
-</select><button onclick="load($('rom').value);$('rom').disabled='disabled';this.disabled='disabled';$('convert').disabled='';$('trace').disabled='';$('play').disabled='';">Load</button> <button id=convert disabled onclick="convert_all();this.disabled='disabled'" title="optional">Convert all</button> <button id=trace disabled onclick="trace()">Trace</button> <button id=endloop disabled onclick="end_current_loop()">End current loop</button> <button id=play disabled>Play</button> Stop at <input id=stopaddress value=08000000> <button onclick="window.location=window.location">Clear</button></td>
+</select><button onclick="load($('rom').value);$('rom').disabled='disabled';this.disabled='disabled';$('convert').disabled='';$('trace').disabled='';$('play').disabled='';">Load</button> <button id=convert disabled onclick="convert_all();this.disabled='disabled'" title="optional">Convert all</button> <button id=trace disabled onclick="trace()">Trace</button> <button id=endloop disabled onclick="end_current_loop()">End current loop</button> <button id=play disabled onclick="play()">Play</button> Stop at <input id=stopaddress value=08000000> <button onclick="window.location=window.location">Clear</button></td>
     </tr>
     <tr>
       <td rowspan=2 id=arm><b>ROM (ARM)</b>
@@ -100,7 +100,7 @@ i<input type=checkbox id=flagi> f<input type=checkbox id=flagf> t<input type=che
   <script src="src/loops.js"></script>
   <script>
     // Enable debug mode
-    debug = true;
+    debug = false;
 
     // Show ARM code debugger
     html = "";

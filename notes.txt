@@ -1,4 +1,5 @@
 todo
+- Montrer les changements dans la RAM
 - remplacer tous les ARM/THUMB R*, [R15, nn] par une même instruction  genre MOVimm R*, NN.
 
 Flag:

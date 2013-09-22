@@ -7,10 +7,13 @@
 *  \_____| |____/ /_/    \_\ (_) | | |___/ *
 *                               _/ |       *
 *  == A HTML5 GBA EMULATOR ==  |__/        *
-*      ( in 49596 bytes )                  *
+*      ( in 51034 bytes )                  *
 \******************************************/
 
 (function(){
+
+  // Disable debug mode for minification
+  var debug = false;
 
   /** DOM **/
   
@@ -41,6 +44,9 @@
    * update ROM, RAM, CPU flags and registers
    */
   var update_debug_interface = function(){
+  
+    // Var
+    var instr;
   
     // Disable current highlight
     if(debug){
@@ -187,11 +193,12 @@
    * set the CPSR flag c according to the value of a register
    * @param rd: register to test
    * @param val: value stored in the register
+   * @param sub (optional): to set if the instruction is a substraction (or a comparison)
    */
-  var update_cpsr_c = function(rd, val){
+  var update_cpsr_c = function(rd, val, sub){
   
     // If the value is different from the register
-    if(val != r[rd]){
+    if((sub && !val) || val != r[rd]){
   
       // Set CPSR flag c (bit 29)
       cpsr |= 0x20000000;
@@ -218,7 +225,7 @@
    * set the CPSR flag v according to the value of a register
    * @param rd: the register to test
    */
-  update_cpsr_v = function(rd){
+  var update_cpsr_v = function(rd){
   
   }
   
@@ -253,6 +260,28 @@
     ,
     ,
     new ArrayBuffer(64 * 1024)
+  ];
+  
+  /*
+   * mirrors
+   * the size of the mirrors for each section of the memory
+   */
+  var mirrors = [
+    ,
+    ,
+    0x40000,
+    0x8000,
+    ,
+    0x400,
+    0x20000,
+    0x400,
+    0x2000000,
+    ,
+    ,
+    ,
+    ,
+    ,
+    0x1000000
   ];
   
   /*
@@ -311,7 +340,7 @@
     }
   
     // Handle mirrors
-    address %= [,,0x40000,0x8000,,0x400,0x20000,0x400,0x2000000,,,,,,0x1000000][prefix];
+    address %= mirrors[prefix];
   
     // Handle writes on I/O
     if(prefix === 4 && write){
@@ -324,7 +353,7 @@
         address -= 8000;
       }
       if(write){
-        //vram(address, value,bytes);
+        vram(address, value, bytes);
       }
     }
   
@@ -341,14 +370,51 @@
   
   /** Screen **/
   
+  /*
+   * vram
+   * update an imagedata
+   * @param address: address offset
+   * @param value: color to set
+   * @param bytes: number of bytes to write
+   */
+  var vram = function(address, value, bytes){
+    var pr, pg, pb, pr2, pg2, pb2;                          // temp color values
+  
+    pr = b(value, 0, 4) * 8;                          // get red value of pixel (bits 0-4)
+    pg = b(value, 5, 9) * 8;                          // get green value of pixel (bits 5-9)
+    pb = b(value, 10, 14) * 8;                        // get blue value of pixel (bits 10-14)
+  
+    if(bytes == 4){                                         // If 4 bytes are set, 2 pixels are drawn
+      pr2 = b(value, 0, 4) * 8;                       // get red value of pixel 2 (bits 0-4)
+      pg2 = b(value, 5, 9) * 8;                       // get green value of pixel 2 (bits 5-9)
+      pb2 = b(value, 10, 14) * 8;                     // get blue value of pixel 2 (bits 10-14)
+    }
+  
+    //switch(dispcnt_m){
+    //  case 0x3:                                           // in mode 3
+        imagedata[0].data[address * 2] = pr;                  // set the pixel's red value
+        imagedata[0].data[address * 2 + 1] = pg;              // set the pixel's green value
+        imagedata[0].data[address * 2 + 2] = pb;              // set the pixel's blue value
+        imagedata[0].data[address * 2 + 3] = 255;             // set the pixel's alpha value (totally opaque)
+  
+        if(bytes == 4){                                     // if we draw 2 pixels
+          imagedata[0].data[address * 2 + 4] = pr2;           // set the pixel 2's red value
+          imagedata[0].data[address * 2 + 5] = pg2;           // set the pixel 2's green value
+          imagedata[0].data[address * 2 + 6] = pb2;           // set the pixel 2's blue value
+          imagedata[0].data[address * 2 + 7] = 255;           // set the pixel 2's alpha value (totally opaque)
+    //    }
+    //    break;
+    }
+  }
   /** ROM loader **/
   
   /*
    * load()
    * Load a ROM, save it in the memory and create different views
    * @param p: the ROM's path
+   * @param c (optional): the function to call when rhe ROM is loaded (usually, "play")
    */
-  load = function(p){
+  load = function(p, c){
   
     // Vars
     var i, xhr;
@@ -378,10 +444,21 @@
       convert_ARM(0);
   
       // Temp
-      convert_all();
-      //for(i = 25; i--;){
-        //trace();
-      //}
+      //debug=false;
+      // for(i = 30; i--;){
+        // trace();
+      // }
+      // end_current_loop();
+      // for(i = 160; i--;){
+        // trace();
+      // }
+      //debug=true;
+      // trace();
+  
+      // Callback
+      if(c){
+        c();
+      }
     }
   }
   
@@ -1511,8 +1588,8 @@
   }
   
   /*
-   *branch_comment()
-   * Assembler comment forbranching functions
+   * branch_comment()
+   * Assembler comment for branching functions
    * @param l: label
    */
   var branch_comment = function(l){
@@ -1597,6 +1674,56 @@
    */
   play = function(){
   
+    // Vars
+    var i, pc_backup;
+  
+    // Loop
+    while(pc_backup != r[15])
+    {
+      // Backup pc
+      pc_backup = r[15];
+  
+      // Instruction subaddress
+      i = r[15] % 0x2000000;
+  
+      // THUMB
+      if(thumb){
+  
+        // Get the next instruction's index
+        i /= 2;
+  
+        // Convert it if needed
+        if(!thumb_opcode[i]){
+          convert_THUMB(i);
+        }
+  
+        // Execute it
+        thumb_opcode[i](thumb_params[i]);
+      }
+  
+      // ARM
+      else{
+  
+        // Get the next instruction's index
+        i /= 4;
+  
+        // Convert it if needed
+        if(!arm_opcode[i]){
+          convert_ARM(i);
+        }
+  
+        // Execute it
+        arm_opcode[i](arm_params[i], arm_cond[i]);
+      }
+    }
+  
+    // Game over, update debug interface
+    if(debug){
+      update_debug_interface();
+    }
+  
+    // Update screen
+    canvas[0].putImageData(imagedata[0], 0, 0);
   }
   
   /** THUMB opcodes */
@@ -1621,24 +1748,31 @@
   }
   
   var thumb_lsr = function(p){
-    // trace += "LSR r" + p[0] + ",r" + p[1] + ",#0x" + p[2].toString(16);
-    // r[p[0]] = rshift(r[p[1]], p[2]);
-    // update_cpsr_c(p[0]);                                // update C flag
-    // update_cpsr_n(p[0]);                                // update N flag
-    // update_cpsr_z(p[0]);                                // update Z flag
-    // r[15] += 2;
+  
+    // Rd = Rs >> nn
+    var val = r[p[0]] = rshift(r[p[1]], p[2]);
+  
+    // Update flags
+    update_cpsr_c(p[0], val);
+    update_cpsr_n(p[0]);
+    update_cpsr_z(p[0]);
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb_asr = function(p){
-    // trace += "ASR r" + p[0] + ",r" + p[1] + ",#0x" + p[2].toString(16);
-    // r[p[0]] = r[p[1]] >> p[2];                      // Rd = Rs >> nn
-    // update_cpsr_c(p[0]);                                // update C flag
-    // if(r[p[0]] < 0){                                    // stay positive whenbit 31 is set
-      // r[p[0]] = 0xFFFFFFFF + r[p[0]] + 1;
-    // }
-    // update_cpsr_n(p[0]);                                // update N flag
-    // update_cpsr_z(p[0]);                                // update Z flag
-    // r[15] += 2;
+  
+    // Rd = Rs >> nn
+    var val = r[p[0]] = r[p[1]] >> p[2];
+  
+    // Update flags
+    update_cpsr_c(p[0], val);
+    update_cpsr_n(p[0]);
+    update_cpsr_z(p[0]);
+  
+    // Next
+    r[15] += 2;
   }
   
   // THUMB 2
@@ -1664,7 +1798,7 @@
     var val = r[p[0]] = r[p[1]] - r[p[2]];
   
     // Update flags
-    update_cpsr_c(r[p[0]], val);
+    update_cpsr_c(r[p[0]], val, true);
     update_cpsr_v(p[0]);
     update_cpsr_n(p[0]);
     update_cpsr_z(p[0]);
@@ -1697,13 +1831,18 @@
   }
   
   var thumb2_mov_rr = function(p){
-    // trace += "MOV r" + p[0] + ",r" + p[1];
-    // r[p[0]] = r[p[1]];                              // Rd = Rs
-    // r[15] += 2;
-    // update_cpsr_c(p[0]);
-    // update_cpsr_n(p[0]);
-    // update_cpsr_z(p[0]);
-    // update_cpsr_v(p[0]);
+  
+    // Rd = Rs
+    var val = r[p[0]] = r[p[1]];
+  
+    // Update flags
+    update_cpsr_c(p[0], val);
+    update_cpsr_n(p[0]);
+    update_cpsr_z(p[0]);
+    update_cpsr_v(p[0]);
+  
+    // Next
+    r[15] += 2;
   }
   
   // THUMB 3
@@ -1724,32 +1863,42 @@
   }
   
   var thumb_cmp_rn = function(p){
-    // trace += "CMP R" + p[0] + ",#0x" + p[1].toString(16);
-    // r[16] = r[p[0]] - p[1];                         // void (R16) = Rd - nn
-    // update_cpsr_c_sub(r[p[0]], p[1]);               // update C flag (substraction)
-    // update_cpsr_v(16);                                  // update V flag
-    // update_cpsr_n(16);                                  // update N flag
-    // update_cpsr_z(16);                                  // update Z flag
-    // r[15] += 2;
+  
+    // void = Rd - nn
+    var val = r[16] = r[p[0]] - p[1];
+  
+    // Update flags
+    update_cpsr_c(r[16], val);
+    update_cpsr_v(16);
+    update_cpsr_n(16);
+    update_cpsr_z(16);
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb_add_rn = function(p){
-    // trace += "ADD r" + p[0] + ",#0x" + p[1].toString(16);
-    // r[p[0]] += p[1];
-    // update_cpsr_c(p[0]);                                // update C flag
-    // update_cpsr_v(p[0]);                                // update V flag
-    // update_cpsr_n(p[0]);                                // update N flag
-    // update_cpsr_z(p[0]);                                // update Z flag
-    // r[15] += 2;
+  
+    // Rd = Rd + nn
+    var val = r[p[0]] += p[1];
+  
+    // Update flags
+    update_cpsr_c(p[0], val);
+    update_cpsr_v(p[0]);
+    update_cpsr_n(p[0]);
+    update_cpsr_z(p[0]);
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb_sub_rn = function(p){
   
     // Rd = Rd - nn
-    var val = r[p[0]] -= p[1];
+    var val = r[p[0]] = r[p[0]] - p[1];
   
     // Update flags
-    update_cpsr_c(r[p[0]], val);
+    update_cpsr_c(r[p[0]], val, true);
     update_cpsr_v(p[0]);
     update_cpsr_n(p[0]);
     update_cpsr_z(p[0]);
@@ -1771,13 +1920,18 @@
   }
   
   var thumb_cmp_rr = function(p){
-    // trace += "CMP r" + p[0] + ",r" + p[1];
-    // r[16] = r[p[0]] - r[p[1]];                  // void = Rd - Rs
-    // update_cpsr_c_sub(r[p[0]], r[p[1]]);        // update C flag (substraction)
-    // update_cpsr_v(16);                                  // update V flag
-    // update_cpsr_n(16);                                  // update N flag
-    // update_cpsr_z(16);                                  // update Z flag
-    // r[15] += 2;
+  
+    // void = Rd - Rs
+    var val = r[16] = r[p[0]] - r[p[1]];
+  
+    // Update flags
+    update_cpsr_c(16, val, true);
+    update_cpsr_v(16);
+    update_cpsr_n(16);
+    update_cpsr_z(16);
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb_orr = function(p){
@@ -1818,14 +1972,18 @@
   }
   
   var thumb5_mov_rr = function(p){
-    // trace += "MOV r" + p[0] + ",r" + p[1];
-    // r[p[0]] = r[p[1]];                              // Rd = Rs
-    // r[15] += 2;
+  
+    // Rd = Rs
+    r[p[0]] = r[p[1]];
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb_nop = function(){
-    // trace += "NOP";
-    // r[15] += 2;
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb_bx = function(p){
@@ -1879,15 +2037,21 @@
   // THUMB 9
   
   var thumb_str_rrn = function(p){
-    // trace += "STR R" + p[0] + ",[R" + p[1] + (p[2] ? (",#0x" + p[2]) : "") + "]";
-    // mem(r[p[1]] + p[2], 4, r[p[0]]);
-    // r[15] += 2;
+  
+    // WORD[Rb+nn] = Rd
+    mem(r[p[1]] + p[2], 4, r[p[0]]);
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb_ldr_rrn = function(p){
-    // trace += "LDR R" + p[0] + ",[R" + p[1] + (p[2] ? (",#0x" + p[2]) : "") + "]";
-    // r[p[0]] = mem(r[p[1]] + p[2], 4);
-    // r[15] += 2;
+  
+    // Rd = WORD[Rb+nn]
+    r[p[0]] = mem(r[p[1]] + p[2], 4);
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb_strb_rrn = function(p){
@@ -1899,9 +2063,12 @@
   // THUMB 10
   
   var thumb_strh_rrn = function(p){
-    // trace += "STRH R" + p[0] + ",[R" + p[1] + (p[2] ? (",#0x" + p[2].toString(16)) : "") + "]";
-    // mem(r[p[1]] + p[2], 2, r[p[0]]);            // HALFWORD[Rb+nn] = Rd
-    // r[15] += 2;
+  
+    // HALFWORD[Rb+nn] = Rd
+    mem(r[p[1]] + p[2], 2, r[p[0]]);
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb_ldrh_rrn = function(p){
@@ -1933,40 +2100,64 @@
   
   // THUMB 14
   
-  var thumb_push = function(p){ // optimizable
-    // trace += "PUSH {";
-    // if(p[1] === 1){                                         // if LR == 1
-      // r[13] -= 4;                                       // decrement R13
-      // mem(r[13], 4, r[14]);                     // push LR (R14)
-      // trace += "R14,";
-    // }
-    // for(var i = 7; i >= 0; i--){                            // for each register "i" (descending order)
-      // if(b(p[0], i)){                                 // if Rlist.i (bit i of Rlist) == 1
-        // r[13] -= 4;                                     // decrement R13
-        // mem(r[13], 4, r[i]);                    // store Ri at address R13 (SP)
-        // trace += "R" + i + ",";
-      // }
-    // }
-    // trace = trace.substr(0, trace.length-1) + "}";
-    // r[15] += 2;
+  var thumb_push = function(p){
+  
+    // If LR is set
+    if(p[1]){
+  
+      // Decrement R13
+      r[13] -= 4;
+  
+      // Push LR
+      mem(r[13], 4, r[14]);
+    }
+  
+    // For Ri in Rlist
+    for(var i = 7; i >= 0; i--){
+  
+      // If it's set
+      if(b(p[0], i)){
+  
+        // decrement R13
+        r[13] -= 4;
+  
+        // Push Ri
+        mem(r[13], 4, r[i]);
+      }
+    }
+  
+    // Next
+    r[15] += 2;
   }
   
-  var thumb_pop = function(p){ // optimizable
-    // trace += "POP {";
-    // for(var i = 0; i < 8; i++){                             // for each register "i" (ascending order)
-      // if(b(p[0], i)){                                 // if Rlist.i (bit i of Rlist) == 1
-        // r[i] = mem(r[13], 4);                       // load Ri from address R13 (SP)
-        // r[13] += 4;                                     // increment R13
-        // trace += "R" + i + ",";
-      // }
-    // }
-    // if(p[1] === 1){                                         // if PC == 1
-      // mem(r[13], 4, r[14]);                     // pop PC (R15)
-      // r[13] += 4;                                       // increment R13
-      // trace += "R15,";
-    // }
-    // trace = trace.substr(0, trace.length-1) + "}";
-    // r[15] += 2;
+  var thumb_pop = function(p){
+  
+    // For Ri in Rlist
+    for(var i = 0; i < 8; i++){
+  
+      // If it's set
+      if(b(p[0], i)){
+  
+        // Pop SP
+        r[i] = mem(r[13], 4);
+  
+        // increment R13
+        r[13] += 4;
+      }
+    }
+  
+    // If PC is set
+    if(p[1]){
+  
+      // Pop PC
+      mem(r[13], 4, r[14]);
+  
+      // increment R13
+      r[13] += 4;
+    }
+  
+    // Next
+    r[15] += 2;
   }
   
   // THUMB 15
@@ -1983,6 +2174,9 @@
         mem(r[p[0]], 4, r[i]);
       }
     }
+  
+    // Increment Rb
+    r[p[0]] += 4;
   
     // Next
     r[15] += 2;
@@ -2164,7 +2358,7 @@
     cpsr |= 0x20;
   
     // THUMB mode
-    thumb = 1;
+    thumb = true;
   }
   
   var arm_blx = function(p){
@@ -2352,13 +2546,39 @@
    * Executes the next instructions while a loop is running.
    */
   end_current_loop = function(){
-    var debug_backup = debug;
+  
+    // Vars
+    var i, debug_backup;
+  
+    // Backup and disable debug mode
+    debug_backup = debug;
     debug = false;
+  
+    // Loop
     while(loops > -1){
       trace();
     }
-    debug = debug_backup;
+  
+    // End loop
     loop_end();
+  
+    // Restore debug mode
+    debug = debug_backup;
+  
+    // Get next instruction subaddress
+    i = r[15] % 0x2000000;
+  
+    // Convert it if needed
+    if(thumb){
+      i /= 2;
+      convert_THUMB(i);
+    }
+    else{
+      i /= 4;
+      convert_ARM(i);
+    }
+  
+    // Debug
     if(debug){
       update_debug_interface();
     }

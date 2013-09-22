@@ -4,8 +4,9 @@
  * load()
  * Load a ROM, save it in the memory and create different views
  * @param p: the ROM's path
+ * @param c (optional): the function to call when rhe ROM is loaded (usually, "play")
  */
-load = function(p){
+load = function(p, c){
 
   // Vars
   var i, xhr;
@@ -35,10 +36,21 @@ load = function(p){
     convert_ARM(0);
 
     // Temp
-    convert_all();
-    //for(i = 25; i--;){
-      //trace();
-    //}
+    //debug=false;
+    // for(i = 30; i--;){
+      // trace();
+    // }
+    // end_current_loop();
+    // for(i = 160; i--;){
+      // trace();
+    // }
+    //debug=true;
+    // trace();
+
+    // Callback
+    if(c){
+      c();
+    }
   }
 }
 

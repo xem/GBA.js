@@ -108,11 +108,12 @@ var update_cpsr_z = function(rd){
  * set the CPSR flag c according to the value of a register
  * @param rd: register to test
  * @param val: value stored in the register
+ * @param sub (optional): to set if the instruction is a substraction (or a comparison)
  */
-var update_cpsr_c = function(rd, val){
+var update_cpsr_c = function(rd, val, sub){
 
   // If the value is different from the register
-  if(val != r[rd]){
+  if((sub && !val) || val != r[rd]){
 
     // Set CPSR flag c (bit 29)
     cpsr |= 0x20000000;
@@ -139,7 +140,7 @@ var update_cpsr_c = function(rd, val){
  * set the CPSR flag v according to the value of a register
  * @param rd: the register to test
  */
-update_cpsr_v = function(rd){
+var update_cpsr_v = function(rd){
 
 }
 

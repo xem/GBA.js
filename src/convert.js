@@ -1124,8 +1124,8 @@ var convert_THUMB = function(i){
 }
 
 /*
- *branch_comment()
- * Assembler comment forbranching functions
+ * branch_comment()
+ * Assembler comment for branching functions
  * @param l: label
  */
 var branch_comment = function(l){

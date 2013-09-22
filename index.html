@@ -8,7 +8,8 @@
     h1 { margin: 5px 0 }
     #menu { position: absolute; top: 10px; left: 10px }
     #screen { width: 480px; height: 320px; margin: 130px auto 0; position: relative }
-    canvas { background: #000; position: absolute; top: 83px; left: 123px; -moz-transform: scale(2); -webkit-transform: scale(2); transform: scale(2) }
+    canvas { position: absolute; top: 83px; left: 123px; -moz-transform: scale(2); -webkit-transform: scale(2); transform: scale(2) }
+    #canvas0 { background: #000 }
     #debugger { position: absolute; bottom: 10px; right: 10px }
   </style>
 </head>
@@ -21,7 +22,7 @@
       <option value="roms/tonc/m3_demo.gba">mode 3</option>
       <option value="roms/tonc/pageflip.gba">page flip</option>
     </select>
-    <button id=play>Play</button>
+    <button id=play onclick="load($('rom').value, play);">Play</button>
   </div>
   <div id=screen>
     <canvas id=canvas0 width=240 height=160></canvas>

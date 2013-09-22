@@ -52,13 +52,39 @@ var loop_end = function(){
  * Executes the next instructions while a loop is running.
  */
 end_current_loop = function(){
-  var debug_backup = debug;
+
+  // Vars
+  var i, debug_backup;
+
+  // Backup and disable debug mode
+  debug_backup = debug;
   debug = false;
+
+  // Loop
   while(loops > -1){
     trace();
   }
-  debug = debug_backup;
+
+  // End loop
   loop_end();
+
+  // Restore debug mode
+  debug = debug_backup;
+
+  // Get next instruction subaddress
+  i = r[15] % 0x2000000;
+
+  // Convert it if needed
+  if(thumb){
+    i /= 2;
+    convert_THUMB(i);
+  }
+  else{
+    i /= 4;
+    convert_ARM(i);
+  }
+
+  // Debug
   if(debug){
     update_debug_interface();
   }

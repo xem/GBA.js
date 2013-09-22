@@ -10,7 +10,7 @@ var arm_bx = function(p){
   cpsr |= 0x20;
 
   // THUMB mode
-  thumb = 1;
+  thumb = true;
 }
 
 var arm_blx = function(p){

@@ -20,24 +20,31 @@ var thumb_lsl_rrn = function(p){
 }
 
 var thumb_lsr = function(p){
-  // trace += "LSR r" + p[0] + ",r" + p[1] + ",#0x" + p[2].toString(16);
-  // r[p[0]] = rshift(r[p[1]], p[2]);
-  // update_cpsr_c(p[0]);                                // update C flag
-  // update_cpsr_n(p[0]);                                // update N flag
-  // update_cpsr_z(p[0]);                                // update Z flag
-  // r[15] += 2;
+
+  // Rd = Rs >> nn
+  var val = r[p[0]] = rshift(r[p[1]], p[2]);
+
+  // Update flags
+  update_cpsr_c(p[0], val);
+  update_cpsr_n(p[0]);
+  update_cpsr_z(p[0]);
+
+  // Next
+  r[15] += 2;
 }
 
 var thumb_asr = function(p){
-  // trace += "ASR r" + p[0] + ",r" + p[1] + ",#0x" + p[2].toString(16);
-  // r[p[0]] = r[p[1]] >> p[2];                      // Rd = Rs >> nn
-  // update_cpsr_c(p[0]);                                // update C flag
-  // if(r[p[0]] < 0){                                    // stay positive whenbit 31 is set
-    // r[p[0]] = 0xFFFFFFFF + r[p[0]] + 1;
-  // }
-  // update_cpsr_n(p[0]);                                // update N flag
-  // update_cpsr_z(p[0]);                                // update Z flag
-  // r[15] += 2;
+
+  // Rd = Rs >> nn
+  var val = r[p[0]] = r[p[1]] >> p[2];
+
+  // Update flags
+  update_cpsr_c(p[0], val);
+  update_cpsr_n(p[0]);
+  update_cpsr_z(p[0]);
+
+  // Next
+  r[15] += 2;
 }
 
 // THUMB 2
@@ -63,7 +70,7 @@ var thumb_sub_rrr = function(p){
   var val = r[p[0]] = r[p[1]] - r[p[2]];
 
   // Update flags
-  update_cpsr_c(r[p[0]], val);
+  update_cpsr_c(r[p[0]], val, true);
   update_cpsr_v(p[0]);
   update_cpsr_n(p[0]);
   update_cpsr_z(p[0]);
@@ -96,13 +103,18 @@ var thumb_sub_rrn = function(p){
 }
 
 var thumb2_mov_rr = function(p){
-  // trace += "MOV r" + p[0] + ",r" + p[1];
-  // r[p[0]] = r[p[1]];                              // Rd = Rs
-  // r[15] += 2;
-  // update_cpsr_c(p[0]);
-  // update_cpsr_n(p[0]);
-  // update_cpsr_z(p[0]);
-  // update_cpsr_v(p[0]);
+
+  // Rd = Rs
+  var val = r[p[0]] = r[p[1]];
+
+  // Update flags
+  update_cpsr_c(p[0], val);
+  update_cpsr_n(p[0]);
+  update_cpsr_z(p[0]);
+  update_cpsr_v(p[0]);
+
+  // Next
+  r[15] += 2;
 }
 
 // THUMB 3
@@ -123,32 +135,42 @@ var thumb_mov_rn = function(p){
 }
 
 var thumb_cmp_rn = function(p){
-  // trace += "CMP R" + p[0] + ",#0x" + p[1].toString(16);
-  // r[16] = r[p[0]] - p[1];                         // void (R16) = Rd - nn
-  // update_cpsr_c_sub(r[p[0]], p[1]);               // update C flag (substraction)
-  // update_cpsr_v(16);                                  // update V flag
-  // update_cpsr_n(16);                                  // update N flag
-  // update_cpsr_z(16);                                  // update Z flag
-  // r[15] += 2;
+
+  // void = Rd - nn
+  var val = r[16] = r[p[0]] - p[1];
+
+  // Update flags
+  update_cpsr_c(r[16], val);
+  update_cpsr_v(16);
+  update_cpsr_n(16);
+  update_cpsr_z(16);
+
+  // Next
+  r[15] += 2;
 }
 
 var thumb_add_rn = function(p){
-  // trace += "ADD r" + p[0] + ",#0x" + p[1].toString(16);
-  // r[p[0]] += p[1];
-  // update_cpsr_c(p[0]);                                // update C flag
-  // update_cpsr_v(p[0]);                                // update V flag
-  // update_cpsr_n(p[0]);                                // update N flag
-  // update_cpsr_z(p[0]);                                // update Z flag
-  // r[15] += 2;
+
+  // Rd = Rd + nn
+  var val = r[p[0]] += p[1];
+
+  // Update flags
+  update_cpsr_c(p[0], val);
+  update_cpsr_v(p[0]);
+  update_cpsr_n(p[0]);
+  update_cpsr_z(p[0]);
+
+  // Next
+  r[15] += 2;
 }
 
 var thumb_sub_rn = function(p){
 
   // Rd = Rd - nn
-  var val = r[p[0]] -= p[1];
+  var val = r[p[0]] = r[p[0]] - p[1];
 
   // Update flags
-  update_cpsr_c(r[p[0]], val);
+  update_cpsr_c(r[p[0]], val, true);
   update_cpsr_v(p[0]);
   update_cpsr_n(p[0]);
   update_cpsr_z(p[0]);
@@ -170,13 +192,18 @@ var thumb_neg_rr = function(p){
 }
 
 var thumb_cmp_rr = function(p){
-  // trace += "CMP r" + p[0] + ",r" + p[1];
-  // r[16] = r[p[0]] - r[p[1]];                  // void = Rd - Rs
-  // update_cpsr_c_sub(r[p[0]], r[p[1]]);        // update C flag (substraction)
-  // update_cpsr_v(16);                                  // update V flag
-  // update_cpsr_n(16);                                  // update N flag
-  // update_cpsr_z(16);                                  // update Z flag
-  // r[15] += 2;
+
+  // void = Rd - Rs
+  var val = r[16] = r[p[0]] - r[p[1]];
+
+  // Update flags
+  update_cpsr_c(16, val, true);
+  update_cpsr_v(16);
+  update_cpsr_n(16);
+  update_cpsr_z(16);
+
+  // Next
+  r[15] += 2;
 }
 
 var thumb_orr = function(p){
@@ -217,14 +244,18 @@ var thumb_add_rr = function(p){
 }
 
 var thumb5_mov_rr = function(p){
-  // trace += "MOV r" + p[0] + ",r" + p[1];
-  // r[p[0]] = r[p[1]];                              // Rd = Rs
-  // r[15] += 2;
+
+  // Rd = Rs
+  r[p[0]] = r[p[1]];
+
+  // Next
+  r[15] += 2;
 }
 
 var thumb_nop = function(){
-  // trace += "NOP";
-  // r[15] += 2;
+
+  // Next
+  r[15] += 2;
 }
 
 var thumb_bx = function(p){
@@ -278,15 +309,21 @@ var thumb_strh_rrr = function(p){
 // THUMB 9
 
 var thumb_str_rrn = function(p){
-  // trace += "STR R" + p[0] + ",[R" + p[1] + (p[2] ? (",#0x" + p[2]) : "") + "]";
-  // mem(r[p[1]] + p[2], 4, r[p[0]]);
-  // r[15] += 2;
+
+  // WORD[Rb+nn] = Rd
+  mem(r[p[1]] + p[2], 4, r[p[0]]);
+
+  // Next
+  r[15] += 2;
 }
 
 var thumb_ldr_rrn = function(p){
-  // trace += "LDR R" + p[0] + ",[R" + p[1] + (p[2] ? (",#0x" + p[2]) : "") + "]";
-  // r[p[0]] = mem(r[p[1]] + p[2], 4);
-  // r[15] += 2;
+
+  // Rd = WORD[Rb+nn]
+  r[p[0]] = mem(r[p[1]] + p[2], 4);
+
+  // Next
+  r[15] += 2;
 }
 
 var thumb_strb_rrn = function(p){
@@ -298,9 +335,12 @@ var thumb_ldrb_rrn = function(p){
 // THUMB 10
 
 var thumb_strh_rrn = function(p){
-  // trace += "STRH R" + p[0] + ",[R" + p[1] + (p[2] ? (",#0x" + p[2].toString(16)) : "") + "]";
-  // mem(r[p[1]] + p[2], 2, r[p[0]]);            // HALFWORD[Rb+nn] = Rd
-  // r[15] += 2;
+
+  // HALFWORD[Rb+nn] = Rd
+  mem(r[p[1]] + p[2], 2, r[p[0]]);
+
+  // Next
+  r[15] += 2;
 }
 
 var thumb_ldrh_rrn = function(p){
@@ -332,40 +372,64 @@ var thumb_add_spn = function(p){
 
 // THUMB 14
 
-var thumb_push = function(p){ // optimizable
-  // trace += "PUSH {";
-  // if(p[1] === 1){                                         // if LR == 1
-    // r[13] -= 4;                                       // decrement R13
-    // mem(r[13], 4, r[14]);                     // push LR (R14)
-    // trace += "R14,";
-  // }
-  // for(var i = 7; i >= 0; i--){                            // for each register "i" (descending order)
-    // if(b(p[0], i)){                                 // if Rlist.i (bit i of Rlist) == 1
-      // r[13] -= 4;                                     // decrement R13
-      // mem(r[13], 4, r[i]);                    // store Ri at address R13 (SP)
-      // trace += "R" + i + ",";
-    // }
-  // }
-  // trace = trace.substr(0, trace.length-1) + "}";
-  // r[15] += 2;
+var thumb_push = function(p){
+
+  // If LR is set
+  if(p[1]){
+
+    // Decrement R13
+    r[13] -= 4;
+
+    // Push LR
+    mem(r[13], 4, r[14]);
+  }
+
+  // For Ri in Rlist
+  for(var i = 7; i >= 0; i--){
+
+    // If it's set
+    if(b(p[0], i)){
+
+      // decrement R13
+      r[13] -= 4;
+
+      // Push Ri
+      mem(r[13], 4, r[i]);
+    }
+  }
+
+  // Next
+  r[15] += 2;
 }
 
-var thumb_pop = function(p){ // optimizable
-  // trace += "POP {";
-  // for(var i = 0; i < 8; i++){                             // for each register "i" (ascending order)
-    // if(b(p[0], i)){                                 // if Rlist.i (bit i of Rlist) == 1
-      // r[i] = mem(r[13], 4);                       // load Ri from address R13 (SP)
-      // r[13] += 4;                                     // increment R13
-      // trace += "R" + i + ",";
-    // }
-  // }
-  // if(p[1] === 1){                                         // if PC == 1
-    // mem(r[13], 4, r[14]);                     // pop PC (R15)
-    // r[13] += 4;                                       // increment R13
-    // trace += "R15,";
-  // }
-  // trace = trace.substr(0, trace.length-1) + "}";
-  // r[15] += 2;
+var thumb_pop = function(p){
+
+  // For Ri in Rlist
+  for(var i = 0; i < 8; i++){
+
+    // If it's set
+    if(b(p[0], i)){
+
+      // Pop SP
+      r[i] = mem(r[13], 4);
+
+      // increment R13
+      r[13] += 4;
+    }
+  }
+
+  // If PC is set
+  if(p[1]){
+
+    // Pop PC
+    mem(r[13], 4, r[14]);
+
+    // increment R13
+    r[13] += 4;
+  }
+
+  // Next
+  r[15] += 2;
 }
 
 // THUMB 15
@@ -382,6 +446,9 @@ var thumb_stmia = function(p){
       mem(r[p[0]], 4, r[i]);
     }
   }
+
+  // Increment Rb
+  r[p[0]] += 4;
 
   // Next
   r[15] += 2;

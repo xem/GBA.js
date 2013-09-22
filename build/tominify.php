@@ -123,6 +123,9 @@ ob_end_clean();
 
 (function(){
 
+  // Disable debug mode for minification
+  var debug = false;
+
   <?php
 
 

@@ -28,6 +28,9 @@ for(var i = 0; i < 4; i++){
  */
 var update_debug_interface = function(){
 
+  // Var
+  var instr;
+
   // Disable current highlight
   if(debug){
     document.getElementsByClassName("highlight")[0].className = "";

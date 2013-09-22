@@ -32,6 +32,28 @@ var m = [
 ];
 
 /*
+ * mirrors
+ * the size of the mirrors for each section of the memory
+ */
+var mirrors = [
+  ,
+  ,
+  0x40000,
+  0x8000,
+  ,
+  0x400,
+  0x20000,
+  0x400,
+  0x2000000,
+  ,
+  ,
+  ,
+  ,
+  ,
+  0x1000000
+];
+
+/*
  * m8, m16 and m32
  * 8-bit, 16-bit and 32-bit views of the memory
  */
@@ -87,7 +109,7 @@ var mem = function(address, bytes, value, mask){
   }
 
   // Handle mirrors
-  address %= [,,0x40000,0x8000,,0x400,0x20000,0x400,0x2000000,,,,,,0x1000000][prefix];
+  address %= mirrors[prefix];
 
   // Handle writes on I/O
   if(prefix === 4 && write){
@@ -100,7 +122,7 @@ var mem = function(address, bytes, value, mask){
       address -= 8000;
     }
     if(write){
-      //vram(address, value,bytes);
+      vram(address, value, bytes);
     }
   }
 
