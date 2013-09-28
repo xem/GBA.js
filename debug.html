@@ -42,8 +42,8 @@
       <td colspan=4><select id=rom>
   <option>Choose a ROM...</option>
   <option value="roms/Tonc/first.gba">first</option>
-  <option value="roms/tonc/m3_demo.gba" selected>mode 3</option>
-  <option value="roms/tonc/pageflip.gba">page flip</option>
+  <option value="roms/Tonc/m3_demo.gba" selected>mode 3</option>
+  <option value="roms/Tonc/pageflip.gba">page flip</option>
 </select><button onclick="load($('rom').value);$('rom').disabled='disabled';this.disabled='disabled';$('convert').disabled='';$('trace').disabled='';$('play').disabled='';">Load</button> <button id=convert disabled onclick="convert_all();this.disabled='disabled'" title="optional">Convert all</button> <button id=trace disabled onclick="trace()">Trace</button> <button id=endloop disabled onclick="end_current_loop()">End current loop</button> <button id=play disabled onclick="play()">Play</button> Stop at <input id=stopaddress value=08000000> <button onclick="window.location=window.location">Clear</button></td>
     </tr>
     <tr>
