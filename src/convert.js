@@ -48,7 +48,10 @@ var condnames =
 convert_all = function(){
 
   // Vars
-  var i;
+  var i, pc_backup;
+
+  // Backup PC
+  pc_backup = r[15];
 
   // ARM
   for(i = 0; i < m32[8].length; i++){
@@ -62,8 +65,8 @@ convert_all = function(){
     convert_THUMB(i);
   }
 
-  // Reset PC
-  r[15] = 0x8000000;
+  // Restore PC
+  r[15] = pc_backup;
 }
 
 /*
@@ -446,7 +449,7 @@ var convert_THUMB = function(i){
       else if(opcode === 0x2){
 
         // Set instruction
-        thumb_opcode[i] = thumb_add_rrr;
+        thumb_opcode[i] = thumb_add_rrn;
 
         // Set params
         thumb_params[i] = [rd, rs, bits6_8];
@@ -459,7 +462,7 @@ var convert_THUMB = function(i){
       else if(opcode === 0x3){
 
         // Set instruction
-        thumb_opcode[i] = thumb_sub_rrr;
+        thumb_opcode[i] = thumb_sub_rrn;
 
         // Set params
         thumb_params[i] = [rd, rs, bits6_8];
@@ -921,7 +924,7 @@ var convert_THUMB = function(i){
     }
 
     // Set ASM params
-    thumb_asm[i] += " r" + thumb_params[i][0] + ",[SP,#0x" + x(thumb_params[i][1]) + "]";
+    thumb_asm[i] += " r" + thumb_params[i][0] + ",[SP" + (thumb_params[i][1] ? ",#0x" + x(thumb_params[i][1]) : "") + "]";
   }
 
   // THUMB 12 instructions
@@ -948,7 +951,7 @@ var convert_THUMB = function(i){
     thumb_params[i] = [nn];
 
     // Set ASM
-    thumb_asm[i] = "ADD SP,#0x" + x(thumb_params[i][0]);
+    thumb_asm[i] = "ADD SP," + (thumb_params[i][0] < 0 ? "-" : "") + "#0x" + x(Math.abs(thumb_params[i][0]));
   }
 
   // THUMB 17 BKPT instruction

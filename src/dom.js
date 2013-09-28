@@ -52,18 +52,18 @@ var update_debug_interface = function(){
   }
 
   // Update cpsr
-  $("cpsr").innerHTML = x(cpsr, 8);
+  $("cpsr").innerHTML = x(cpsr[0], 8);
 
   // Update spsr
-  $("spsr").innerHTML = x(spsr, 8);
+  $("spsr").innerHTML = x(spsr[0], 8);
 
   // Update flags
-  $("flagn").checked = !!b(cpsr, 31);
-  $("flagz").checked = !!b(cpsr, 30);
-  $("flagc").checked = !!b(cpsr, 29);
-  $("flagv").checked = !!b(cpsr, 28);
-  $("flagi").checked = !!b(cpsr, 7);
-  $("flagf").checked = !!b(cpsr, 6);
-  $("flagt").checked = !!b(cpsr, 5);
-  $("flagq").checked = !!b(cpsr, 27);
+  $("flagn").checked = !!b(cpsr[0], 31);
+  $("flagz").checked = !!b(cpsr[0], 30);
+  $("flagc").checked = !!b(cpsr[0], 29);
+  $("flagv").checked = !!b(cpsr[0], 28);
+  $("flagi").checked = !!b(cpsr[0], 7);
+  $("flagf").checked = !!b(cpsr[0], 6);
+  $("flagt").checked = !!b(cpsr[0], 5);
+  $("flagq").checked = !!b(cpsr[0], 27);
 }

@@ -7,7 +7,7 @@
 *  \_____| |____/ /_/    \_\ (_) | | |___/ *
 *                               _/ |       *
 *  == A HTML5 GBA EMULATOR ==  |__/        *
-*      ( in 51034 bytes )                  *
+*      ( in 49396 bytes )                  *
 \******************************************/
 
 (function(){
@@ -69,20 +69,20 @@
     }
   
     // Update cpsr
-    $("cpsr").innerHTML = x(cpsr, 8);
+    $("cpsr").innerHTML = x(cpsr[0], 8);
   
     // Update spsr
-    $("spsr").innerHTML = x(spsr, 8);
+    $("spsr").innerHTML = x(spsr[0], 8);
   
     // Update flags
-    $("flagn").checked = !!b(cpsr, 31);
-    $("flagz").checked = !!b(cpsr, 30);
-    $("flagc").checked = !!b(cpsr, 29);
-    $("flagv").checked = !!b(cpsr, 28);
-    $("flagi").checked = !!b(cpsr, 7);
-    $("flagf").checked = !!b(cpsr, 6);
-    $("flagt").checked = !!b(cpsr, 5);
-    $("flagq").checked = !!b(cpsr, 27);
+    $("flagn").checked = !!b(cpsr[0], 31);
+    $("flagz").checked = !!b(cpsr[0], 30);
+    $("flagc").checked = !!b(cpsr[0], 29);
+    $("flagv").checked = !!b(cpsr[0], 28);
+    $("flagi").checked = !!b(cpsr[0], 7);
+    $("flagf").checked = !!b(cpsr[0], 6);
+    $("flagt").checked = !!b(cpsr[0], 5);
+    $("flagq").checked = !!b(cpsr[0], 27);
   }/** CPU **/
   
   /*
@@ -94,7 +94,7 @@
    * r15: program counter (PC). Initial value: 0x8000000
    * r16: used here to store the result of void operations
    */
-  var r = new Uint32Array(new ArrayBuffer(17 * 4));
+  var r = new Uint32Array(new ArrayBuffer(4 * 17));
   r[13] = 0x3007F00;
   r[15] = 0x8000000;
   
@@ -102,13 +102,13 @@
    * cpsr
    * Current program status register
    */
-  var cpsr = 0;
+  var cpsr = new Uint32Array(new ArrayBuffer(4));
   
   /*
    * spsr
    * Stored program status register
    */
-  var spsr = 0;
+  var spsr = new Uint32Array(new ArrayBuffer(4));
   
   /*
    * thumb
@@ -139,7 +139,8 @@
     if(b(r[rd], 31) === 1){
   
       // Set CPSR flag n (bit 31)
-      cpsr |= 0x80000000;
+      cpsr[0] |= 0x80000000;
+      //cpsr = ((cpsr * 8) | 0x80000000) / 8;
   
       // Update checkbox
       if(debug){
@@ -149,7 +150,7 @@
     else{
   
       // Unset CPSR flag n
-      cpsr &= 0x7FFFFFFF;
+      cpsr[0] &= 0x7FFFFFFF;
   
       // Update checkbox
       if(debug){
@@ -169,7 +170,7 @@
     if(r[rd] === 0){
   
       // Set CPSR flag z (bit 30)
-      cpsr |= 0x40000000;
+      cpsr[0] |= 0x40000000;
   
       // Update checkbox
       if(debug){
@@ -179,7 +180,7 @@
     else{
   
       // Unset CPSR flag z
-      cpsr &= 0xBFFFFFFF;
+      cpsr[0] &= 0xBFFFFFFF;
   
       // Update checkbox
       if(debug){
@@ -198,10 +199,10 @@
   var update_cpsr_c = function(rd, val, sub){
   
     // If the value is different from the register
-    if((sub && !val) || val != r[rd]){
+    if((sub && val > 0 && val != r[rd]) || (sub && !val && !r[rd]) || (!sub && val != r[rd])){
   
       // Set CPSR flag c (bit 29)
-      cpsr |= 0x20000000;
+      cpsr[0] |= 0x20000000;
   
       // Update checkbox
       if(debug){
@@ -211,7 +212,7 @@
     else{
   
       // Unset CPSR flag z
-      cpsr &= 0xDFFFFFFF;
+      cpsr[0] &= 0xDFFFFFFF;
   
       // Update checkbox
       if(debug){
@@ -412,7 +413,7 @@
    * load()
    * Load a ROM, save it in the memory and create different views
    * @param p: the ROM's path
-   * @param c (optional): the function to call when rhe ROM is loaded (usually, "play")
+   * @param c (optional): the function to call when the ROM is loaded (usually, "play")
    */
   load = function(p, c){
   
@@ -444,16 +445,13 @@
       convert_ARM(0);
   
       // Temp
-      //debug=false;
-      // for(i = 30; i--;){
-        // trace();
-      // }
-      // end_current_loop();
-      // for(i = 160; i--;){
-        // trace();
-      // }
-      //debug=true;
-      // trace();
+      /*convert_all();
+      debug=false;
+      for(i = 400000; i--;){
+        trace();
+      }
+      debug=true;
+      trace();*/
   
       // Callback
       if(c){
@@ -512,7 +510,10 @@
   convert_all = function(){
   
     // Vars
-    var i;
+    var i, pc_backup;
+  
+    // Backup PC
+    pc_backup = r[15];
   
     // ARM
     for(i = 0; i < m32[8].length; i++){
@@ -526,8 +527,8 @@
       convert_THUMB(i);
     }
   
-    // Reset PC
-    r[15] = 0x8000000;
+    // Restore PC
+    r[15] = pc_backup;
   }
   
   /*
@@ -910,7 +911,7 @@
         else if(opcode === 0x2){
   
           // Set instruction
-          thumb_opcode[i] = thumb_add_rrr;
+          thumb_opcode[i] = thumb_add_rrn;
   
           // Set params
           thumb_params[i] = [rd, rs, bits6_8];
@@ -923,7 +924,7 @@
         else if(opcode === 0x3){
   
           // Set instruction
-          thumb_opcode[i] = thumb_sub_rrr;
+          thumb_opcode[i] = thumb_sub_rrn;
   
           // Set params
           thumb_params[i] = [rd, rs, bits6_8];
@@ -1385,7 +1386,7 @@
       }
   
       // Set ASM params
-      thumb_asm[i] += " r" + thumb_params[i][0] + ",[SP,#0x" + x(thumb_params[i][1]) + "]";
+      thumb_asm[i] += " r" + thumb_params[i][0] + ",[SP" + (thumb_params[i][1] ? ",#0x" + x(thumb_params[i][1]) : "") + "]";
     }
   
     // THUMB 12 instructions
@@ -1412,7 +1413,7 @@
       thumb_params[i] = [nn];
   
       // Set ASM
-      thumb_asm[i] = "ADD SP,#0x" + x(thumb_params[i][0]);
+      thumb_asm[i] = "ADD SP," + (thumb_params[i][0] < 0 ? "-" : "") + "#0x" + x(Math.abs(thumb_params[i][0]));
     }
   
     // THUMB 17 BKPT instruction
@@ -1643,9 +1644,10 @@
       arm_opcode[i](arm_params[i], arm_cond[i]);
     }
   
-    // Update debug interface
+    // Update debug interface and screen
     if(debug){
       update_debug_interface();
+      canvas[0].putImageData(imagedata[0], 0, 0);
     }
   
     // Next instruction subaddress
@@ -1798,7 +1800,7 @@
     var val = r[p[0]] = r[p[1]] - r[p[2]];
   
     // Update flags
-    update_cpsr_c(r[p[0]], val, true);
+    update_cpsr_c(p[0], val, true);
     update_cpsr_v(p[0]);
     update_cpsr_n(p[0]);
     update_cpsr_z(p[0]);
@@ -1808,26 +1810,35 @@
   }
   
   var thumb_add_rrn = function(p){
-    // trace += "ADD R" + p[0] + ",R" + p[1] + ",#0x" + p[2].toString(16);
-    // r[p[0]] = r[p[1]] + p[2];                       // Rd = Rs + nn
-    // update_cpsr_c(p[0]);                                // update C flag
-    // update_cpsr_n(p[0]);                                // update V flag
-    // update_cpsr_z(p[0]);                                // update N flag
-    // update_cpsr_v(p[0]);                                // update Z flag
-    // r[15] += 2;
+  
+    // Rd = Rs + nn
+    var val = r[p[0]] = r[p[1]] + p[2];
+  
+    // Update flags
+    update_cpsr_c(p[0], val);
+    update_cpsr_n(p[0]);
+    update_cpsr_z(p[0]);
+    update_cpsr_v(p[0]);
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb_sub_rrn = function(p){
-    // trace += "SUB R" + p[0] + ",R" + p[1] + ",#0x" + p[2].toString(16);
-    // r[p[0]] = r[p[1]] - p[2];                       // Rd = Rs - nn
+  
+    // Rd = Rs - nn
+    var val = r[p[0]] = r[p[1]] - p[2];
     // if(r[p[0]] < 0){                                    // write negarive numbers on 32bits signed
       // r[p[0]] = 0xFFFFFFFF + r[p[0]] + 1;
     // }
-    // update_cpsr_c_sub(r[p[1]], p[2]);               // update C flag (substraction)
-    // update_cpsr_v(p[0]);                                // update V flag
-    // update_cpsr_n(p[0]);                                // update N flag
-    // update_cpsr_z(p[0]);                                // update Z flag
-    // r[15] += 2;
+    // Update flags
+    update_cpsr_c(r[p[0]], val, true);
+    update_cpsr_v(p[0]);
+    update_cpsr_n(p[0]);
+    update_cpsr_z(p[0]);
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb2_mov_rr = function(p){
@@ -1910,13 +1921,18 @@
   // THUMB 4
   
   var thumb_neg_rr = function(p){
-    // trace += "NEG r" + p[0] + ",r" + p[1];
-    // r[p[0]] = 0xFFFFFFFF - r[p[1]] + 1;             // Rd = - Rs
-    // update_cpsr_c(p[0]);                                // update C flag
-    // update_cpsr_v(p[0]);                                // update V flag
-    // update_cpsr_n(p[0]);                                // update N flag
-    // update_cpsr_z(p[0]);                                // update Z flag
-    // r[15] += 2;
+  
+    // Rd = - Rs
+    var val = r[p[0]] = 0xFFFFFFFF - r[p[1]] + 1;
+  
+    // update flags
+    update_cpsr_c(p[0], val);
+    update_cpsr_v(p[0]);
+    update_cpsr_n(p[0]);
+    update_cpsr_z(p[0]);
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb_cmp_rr = function(p){
@@ -1935,19 +1951,29 @@
   }
   
   var thumb_orr = function(p){
-    // trace += "ORR r" + p[0] + ",r" + p[1];
-    // r[p[0]] |= r[p[1]];                             // Rd = Rd OR Rs
-    // update_cpsr_n(p[0]);                                // update N flag
-    // update_cpsr_z(p[0]);                                // update Z flag
-    // r[15] += 2;
+  
+    // Rd = Rd OR Rs
+    r[p[0]] |= r[p[1]];
+  
+    // Update flags
+    update_cpsr_n(p[0]);
+    update_cpsr_z(p[0]);
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb_mul = function(p){
-    // trace += "MUL r" + p[0] + ",r" + p[1];
-    // r[p[0]] *= r[p[1]];                             // Rd = Rd OR Rs
-    // update_cpsr_n(p[0]);                                // update N flag
-    // update_cpsr_z(p[0]);                                // update Z flag
-    // r[15] += 2;
+  
+    // Rd = Rd * Rs
+    r[p[0]] *= r[p[1]];
+  
+    // Update flags
+    update_cpsr_n(p[0]);
+    update_cpsr_z(p[0]);
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb_bic = function(p){
@@ -1966,9 +1992,12 @@
   // THUMB 5
   
   var thumb_add_rr = function(p){
-    // trace += "ADD r" + p[0] + ",r" + p[1];
-    // r[p[0]] += r[p[1]];                             // Rd = Rd + Rs
-    // r[15] += 2;
+  
+    // Rd = Rd + Rs
+    r[p[0]] += r[p[1]];
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb5_mov_rr = function(p){
@@ -2029,9 +2058,12 @@
   // THUMB 8
   
   var thumb_strh_rrr = function(p){
-    // trace += "STRH R" + p[0] + ",[R" + p[1] + ",R" + p[2] + "]";
-    // mem(r[p[1]] + r[p[2]], 2, r[p[0]]);     // HALFWORD[Rb+Ro] = Rd
-    // r[15] += 2;
+  
+    // HALFWORD[Rb+Ro] = Rd
+    mem(r[p[1]] + r[p[2]], 2, r[p[0]]);
+  
+    // Next
+    r[15] += 2;
   }
   
   // THUMB 9
@@ -2077,15 +2109,21 @@
   // THUMB 11
   
   var thumb_str_spn = function(p){
-    // trace += "STR R" + p[0] + ",[SP" + (p[1] ? (",#0x" + p[1].toString(16)) : "") + "]";
-    // mem(r[13] + p[1], 4, r[p[0]]);              // WORD[SP+nn] = Rd
-    // r[15] += 2;
+  
+    // WORD[SP+nn] = Rd
+    mem(r[13] + p[1], 4, r[p[0]]);
+  
+    // Next
+    r[15] += 2;
   }
   
   var thumb_ldr_spn = function(p){
-    // trace += "LDR R" + p[0] + ",[SP" + (p[1] ? (",#0x" + p[1].toString(16)) : "") + "]";
-    // r[p[0]] = mem(r[13] + p[1], 4);             // Rd = WORD[SP+nn]
-    // r[15] += 2;
+  
+    // Rd = WORD[SP+nn]
+    r[p[0]] = mem(r[13] + p[1], 4);
+  
+    // Next
+    r[15] += 2;
   }
   
   // THUMB 12
@@ -2093,9 +2131,12 @@
   // THUMB 13
   
   var thumb_add_spn = function(p){
-    // trace += "ADD SP,#" + p[0].toString(16);
-    // r[13] += p[0];                                      // SP = SP +/- nn
-    // r[15] += 2;
+  
+    // SP = SP +/- nn
+    r[13] += p[0];
+  
+    // Next
+    r[15] += 2;
   }
   
   // THUMB 14
@@ -2207,7 +2248,7 @@
   var thumb_beq = function(p){
   
     // If CPSR flag Z is set
-    if(b(cpsr, 30)){
+    if(b(cpsr[0], 30)){
   
       // PC = address
       r[15] = p[0];
@@ -2222,7 +2263,7 @@
   var thumb_bne = function(p){
   
     // If CPSR flag Z isn't set
-    if(!b(cpsr, 30)){
+    if(!b(cpsr[0], 30)){
   
       // detect loops
       detect_loop(p[0]);
@@ -2244,7 +2285,7 @@
   var thumb_bcs = function(p){
   
     // If CPSR flag C is set
-    if(b(cpsr, 29)){
+    if(b(cpsr[0], 29)){
   
       // detect loops
       if(p[0] < r[15] && p[0] > r[15] - 20){
@@ -2283,44 +2324,47 @@
   var thumb_bge = function(p){}
   
   var thumb_blt = function(p){
-    // trace += "BLT #0x" + p[0].toString(16);
-    // if(b(cpsr, 31) !==b(cpsr, 28))                     // if CPSR.N != CPSR.V:
-    // {
-      // if(p[0] < r[15] && p[0] > r[15] - 20){                // detect loops
-        // loops++;
-      // }
-      // r[15] = p[0];                                         // PC = address
-    // }
-    // else{
-      // trace += ";false";
-      // if(loops > 0){
-        // loops = -1;
-      // }
-      // r[15] += 2;
-    // }
+  
+    // if CPSR.N != CPSR.V:
+    if(b(cpsr[0], 31) !== b(cpsr[0], 28)){
+  
+      // detect loops
+      detect_loop(p[0]);
+  
+      // PC = address
+      r[15] = p[0];
+    }
+    else{
+  
+      // End loop
+      loop_end();
+  
+      // Next
+      r[15] += 2;
+    }
   }
   
   var thumb_bgt = function(p){}
   
   var thumb_ble = function(p){
-    // trace += "BLE #0x" + p[0].toString(16);
-    // if(
-      // (cpsr & 0x40000000) === 0x40000000                    // if CPSR.Z == 1
-      // ||
-      // (b(cpsr, 31) !==b(cpsr, 28))                     // or CPSR.N != CPSR.V:
-    // ){
-      // if(p[0] < r[15] && p[0] > r[15] - 20){                // detect loops
-        // loops++;
-      // }
-      // r[15] = p[0];                                         // PC = address
-    // }
-    // else{
-      // trace += ";false";
-      // if(loops > 0){
-        // loops = -1;
-      // }
-      // r[15] += 2;
-    // }
+  
+    // if CPSR.Z is set or CPSR.N != CPSR.V
+    if(b(cpsr[0], 30) || (b(cpsr[0], 31) !== b(cpsr[0], 28))){
+  
+      // detect loops
+      detect_loop(p[0]);
+  
+      // PC = address
+      r[15] = p[0];
+    }
+    else {
+  
+      // End loop
+      loop_end();
+  
+      // Next
+      r[15] += 2;
+    }
   }
   
   // THUMB 17
@@ -2328,11 +2372,9 @@
   // THUMB 18
   
   var thumb_b = function(p){
-    // trace += "B #0x" + p[0].toString(16);
-    // if(p[0] == r[15]){
-      // stopped = true;
-    // }
-    // r[15] = p[0];                                           // PC = PC + 4 + offset
+  
+    // PC = PC + 4 + offset
+    r[15] = p[0];
   }
   
   // THUMB 19
@@ -2355,7 +2397,7 @@
     r[15] = r[p[0]] - 1;
   
     // CPSR.t = 1
-    cpsr |= 0x20;
+    cpsr[0] |= 0x20;
   
     // THUMB mode
     thumb = true;
@@ -2405,7 +2447,7 @@
   var arm_msr_cpsr = function(p){
   
     // CPSR[field] = Op (with a bit mask)
-    cpsr = r[p[0]] & p[1];
+    cpsr[0] = r[p[0]] & p[1];
   
     // Next
     r[15] += 4;

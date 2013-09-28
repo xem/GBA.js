@@ -7,7 +7,7 @@ var arm_bx = function(p){
   r[15] = r[p[0]] - 1;
 
   // CPSR.t = 1
-  cpsr |= 0x20;
+  cpsr[0] |= 0x20;
 
   // THUMB mode
   thumb = true;
@@ -57,7 +57,7 @@ var arm_mov_ri = function(p){
 var arm_msr_cpsr = function(p){
 
   // CPSR[field] = Op (with a bit mask)
-  cpsr = r[p[0]] & p[1];
+  cpsr[0] = r[p[0]] & p[1];
 
   // Next
   r[15] += 4;

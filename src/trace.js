@@ -33,9 +33,10 @@ trace = function(){
     arm_opcode[i](arm_params[i], arm_cond[i]);
   }
 
-  // Update debug interface
+  // Update debug interface and screen
   if(debug){
     update_debug_interface();
+    canvas[0].putImageData(imagedata[0], 0, 0);
   }
 
   // Next instruction subaddress

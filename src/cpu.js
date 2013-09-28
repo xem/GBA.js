@@ -9,7 +9,7 @@
  * r15: program counter (PC). Initial value: 0x8000000
  * r16: used here to store the result of void operations
  */
-var r = new Uint32Array(new ArrayBuffer(17 * 4));
+var r = new Uint32Array(new ArrayBuffer(4 * 17));
 r[13] = 0x3007F00;
 r[15] = 0x8000000;
 
@@ -17,13 +17,13 @@ r[15] = 0x8000000;
  * cpsr
  * Current program status register
  */
-var cpsr = 0;
+var cpsr = new Uint32Array(new ArrayBuffer(4));
 
 /*
  * spsr
  * Stored program status register
  */
-var spsr = 0;
+var spsr = new Uint32Array(new ArrayBuffer(4));
 
 /*
  * thumb
@@ -54,7 +54,8 @@ var update_cpsr_n = function(rd){
   if(b(r[rd], 31) === 1){
 
     // Set CPSR flag n (bit 31)
-    cpsr |= 0x80000000;
+    cpsr[0] |= 0x80000000;
+    //cpsr = ((cpsr * 8) | 0x80000000) / 8;
 
     // Update checkbox
     if(debug){
@@ -64,7 +65,7 @@ var update_cpsr_n = function(rd){
   else{
 
     // Unset CPSR flag n
-    cpsr &= 0x7FFFFFFF;
+    cpsr[0] &= 0x7FFFFFFF;
 
     // Update checkbox
     if(debug){
@@ -84,7 +85,7 @@ var update_cpsr_z = function(rd){
   if(r[rd] === 0){
 
     // Set CPSR flag z (bit 30)
-    cpsr |= 0x40000000;
+    cpsr[0] |= 0x40000000;
 
     // Update checkbox
     if(debug){
@@ -94,7 +95,7 @@ var update_cpsr_z = function(rd){
   else{
 
     // Unset CPSR flag z
-    cpsr &= 0xBFFFFFFF;
+    cpsr[0] &= 0xBFFFFFFF;
 
     // Update checkbox
     if(debug){
@@ -113,10 +114,10 @@ var update_cpsr_z = function(rd){
 var update_cpsr_c = function(rd, val, sub){
 
   // If the value is different from the register
-  if((sub && !val) || val != r[rd]){
+  if((sub && val > 0 && val != r[rd]) || (sub && !val && !r[rd]) || (!sub && val != r[rd])){
 
     // Set CPSR flag c (bit 29)
-    cpsr |= 0x20000000;
+    cpsr[0] |= 0x20000000;
 
     // Update checkbox
     if(debug){
@@ -126,7 +127,7 @@ var update_cpsr_c = function(rd, val, sub){
   else{
 
     // Unset CPSR flag z
-    cpsr &= 0xDFFFFFFF;
+    cpsr[0] &= 0xDFFFFFFF;
 
     // Update checkbox
     if(debug){
