@@ -26,5 +26,5 @@ http://github.com/xem/GBA.js/wiki
   <img src="http://i.creativecommons.org/p/zero/1.0/88x31.png" alt="CC0">
 </a>
 
-To the extent possible under law, <a href="xem.github.io">xem</a> has waived all copyright and related or neighboring rights to GBA.js.
+To the extent possible under law, <a href="http://xem.github.io">Maxime Euzière</a> has waived all copyright and related or neighboring rights to GBA.js.
 This work is published from France.
