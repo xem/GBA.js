@@ -1,36 +1,30 @@
  GBA.js ~ A HTML5 GBA emulator
 ===============================
 
-Try it!
-=======
 
-Emulator:
+**Emulator:**
 
 http://xem.github.com/GBA.js
 
 
-Debugger:
+
+**Debugger:**
 
 http://xem.github.com/GBA.js/debug.html
-<br>
-<br>
 
-***
 
-Sources
-=======
 
-The ROMs come from:
+**Making-of:**
 
-* <a href="http://www.coranac.com/tonc/text/toc.htm">Tonc</a> (demos)
-* <a href="http://devkitpro.org/">DevKitPro</a> (demos)
-* <a href="http://filetrip.net/">FileTrip</a> (games)
-* <a href="http://gbaemu.dcemu.co.uk/">GBAnews</a> (games)
+http://github.com/xem/GBA.js/wiki
 
-<br>
 
-The valuable information comes from:
 
-* <a href="http://nocash.emubase.de/gbatek.htm">GBAtek</a> (describes GBA and DS hardware)
-* <a href="http://www.cs.rit.edu/~tjh8300/CowBite/CowBiteSpecFrame.htm">CowBite specs</a> (describes the GBA CPU and Memory)
-* <a href="http://www.coranac.com/tonc/text/toc.htm">Tonc</a> (teaches how to make GBA games)
+**Licence:**
+
+<a href="http://creativecommons.org/publicdomain/zero/1.0/">
+  <img src="http://i.creativecommons.org/p/zero/1.0/88x31.png" alt="CC0">
+</a>
+
+To the extent possible under law, <a href="xem.github.io">xem</a> has waived all copyright and related or neighboring rights to GBA.js.
+This work is published from France.
