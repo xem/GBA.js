@@ -54,18 +54,19 @@ var mirrors = [
 ];
 
 /*
- * m8, m16 and m32
+ * m8, m16, m32, mviews
  * 8-bit, 16-bit and 32-bit views of the memory
  */
 var m8 = [];
 var m16 = [];
 var m32 = [];
+var mviews = [, m8, m16,, m32];
 
 /*
  * mem()
  * read or write data in the memory
  * @param address: the address to read or write
- * @parambytes: the length of the value to read or write, inbytes (1, 2 or 4)
+ * @parambytes: the length of the value to read or write, in bytes (1, 2 or 4)
  * @param value (optional): the value to write
  * @param mask (optional): thebit mask to apply to the written value
  * @return: if a value is specified, it is written in memory
@@ -74,23 +75,10 @@ var m32 = [];
 var mem = function(address, bytes, value, mask){
 
   // Vars
-  var i, prefix, write, view;
+  var i, prefix, write;
 
   // Detect write operations
   write = value !== undefined;
-
-  // Select the right view
-  if(bytes === 1){
-    view = m8;
-  }
-
-  else if(bytes === 2){
-    view = m16;
-  }
-
-  else if(bytes === 4){
-    view = m32;
-  }
 
   // Get prefix (bits 24-27 of address)
   prefix = rshift(address, 24);
@@ -128,12 +116,12 @@ var mem = function(address, bytes, value, mask){
 
   // Write a value
   if(write){
-    view[prefix][address / bytes] = value;
+    mviews[bytes][prefix][address / bytes] = value;
   }
 
   // Read a value
   else {
-    return view[prefix][address / bytes] || 0;
+    return mviews[bytes][prefix][address / bytes] || 0;
   }
 }
 
