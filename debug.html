@@ -7,28 +7,28 @@ html, body { overflow: hidden }
 table { width: 100%; table-layout: fixed; border-collapse: collapse; font: normal 12px/12px courier }
 td { border: 2px solid #ddd; vertical-align: middle; text-align: center; padding: 2px }
 div { white-space: pre; text-align: left }
-hr { margin: 2px }
+hr { margin: 2px; border: 1px solid #ddd }
 #debug_arm, #debug_thumb { height: 460px; overflow: auto; overflow-x: hidden }
 .debug_hidden { display: none }
 #debug_cpu { width: 105px }
-#debug_screen { width: 240px; height: 160px }
+#debug_screen { width: 240px; height: 160px; background: #000 }
 #debug_screen div { width: 240px; height: 160px; position: relative }
-canvas { background: #000; position: absolute; top: 0; left: 0 }
+canvas { position: absolute; top: 0; left: 0 }
 #debug_wram { height: 180px; overflow: auto; overflow-x: hidden }
 button, input, select { height: 16px; font-size: 12px; line-height: 1px; margin: 2px; vertical-align: middle }
 button, select { width: 100px }
 #debug_cycles { width: 150px }
 #debug_stop_address { width: 65px }
 .debug_highlight { background: #cde; display:inline-block; width: 100% }
-@media screen and (min-width: 1000px){
-  #debug_arm, #debug_thumb { display: inline-block; width: 50% }
-}
+@media screen and (min-width: 1000px){ #debug_arm, #debug_thumb { display: inline-block; width: 50% }}
 </style>
 <table>
 <tr>
 <td rowspan=3>
-<div id=debug_arm title=ARM></div><div id=debug_thumb title=THUMB class=debug_hidden></div></td>
-<td id=debug_cpu title=CPU rowspan=2><div>r0   <span id=debug_r0>00000000</span>
+<div id=debug_arm title=ARM></div><div id=debug_thumb title=THUMB class=debug_hidden></div>
+</td>
+<td id=debug_cpu title=CPU rowspan=2>
+<div>r0   <span id=debug_r0>00000000</span>
 r1   <span id=debug_r1>00000000</span>
 r2   <span id=debug_r2>00000000</span>
 r3   <span id=debug_r3>00000000</span>
@@ -48,7 +48,8 @@ void <span id=debug_r16>00000000</span>
 cpsr <span id=debug_cpsr>0000001F</span>
 spsr <span id=debug_spsr>00000000</span>
 <hr>n<input type=checkbox id=debug_flag_n>z<input type=checkbox id=debug_flag_z>c<input type=checkbox id=debug_flag_c>v<input type=checkbox id=debug_flag_v>
-i<input type=checkbox id=debug_flag_i>f<input type=checkbox id=debug_flag_f>t<input type=checkbox id=debug_flag_t>q<input type=checkbox id=debug_flag_q></div></td>
+i<input type=checkbox id=debug_flag_i>f<input type=checkbox id=debug_flag_f>t<input type=checkbox id=debug_flag_t>q<input type=checkbox id=debug_flag_q></div>
+</td>
 <td id=debug_screen><div>
 <canvas id=canvas0 width=240 height=160></canvas>
 <canvas id=canvas1 width=240 height=160></canvas>
@@ -64,12 +65,12 @@ i<input type=checkbox id=debug_flag_i>f<input type=checkbox id=debug_flag_f>t<in
 <option value="roms/Tonc/m3_demo.gba" selected>mode 3</option>
 <option value="roms/Tonc/pageflip.gba">page flip</option>
 </select>
-<button id=debug_load>Load</button>
-<button id=debug_convert disabled title="(optional)">Disassemble</button>
-<button id=debug_trace disabled>Trace</button>
-<button id=debug_end_loop disabled>End loop</button>
-<button id=debug_reset disabled>Reset</button>
-<button id=debug_play disabled>Play</button>
+<button id=debug_load onclick="load(debug_rom_select.value);this.disabled=1;debug_convert.disabled=0;debug_trace.disabled=0;debug_play.disabled=0">Load</button>
+<button id=debug_convert disabled title="(optional)" onclick=convert_all()>Decode all</button>
+<button id=debug_trace disabled onclick="trace()">Trace</button>
+<button id=debug_end_loop disabled onclick="end_current_loop()">End loop</button>
+<button id=debug_reset onclick="location=location">Reset</button>
+<button id=debug_play disabled onclick="play()">Play</button>
 Stop <input id=debug_stop_address value=08000000>
 <br>
 Cycles <input id=debug_cycles value=0 readonly>

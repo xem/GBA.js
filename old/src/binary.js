@@ -20,7 +20,7 @@ var rshift = function(number, shift){
 
 /*
  * b()
- * Extracts somebits in thebinary representation of a number
+ * Extracts some bits in the binary representation of a number
  */
 var b = function(number, start, end){
   return rshift(number, start) & (Math.pow(2, (end || start) - start + 1) - 1);
@@ -28,7 +28,7 @@ var b = function(number, start, end){
 
 /*
  * ror()
- * perform a right rotation in thebinary representation of a number
+ * perform a right rotation in the binary representation of a number
  */
 var ror = function(number, length, bits){
   return lshift((number & Math.pow(2,bits) - 1), length -bits) + rshift(number, bits);
